@@ -2,6 +2,13 @@
 
 A pure Rust rule-based NLP engine that translates natural language into AXON notation, compiled to WebAssembly, runs entirely in the browser. Handles both general knowledge and programming tasks in one unified notation.
 
+VSCode package: https://marketplace.visualstudio.com/items?itemName=colwill.axon-notation
+
+
+Launch VS Code Quick Open (Ctrl+P), paste the following command, and press enter.
+
+Install command in vscode: `ext install colwill.axon-notation`
+
 ## Stack
 
 - **Translation engine**: Pure Rust rule-based NLP (`src/translator.rs` + `src/code_translator.rs`)
