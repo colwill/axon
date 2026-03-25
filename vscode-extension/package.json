@@ -1,0 +1,123 @@
+{
+  "name": "axon-notation",
+  "displayName": "AXON Notation",
+  "description": "Translate natural language to AXON notation for token-efficient AI communication",
+  "version": "0.2.0",
+  "publisher": "colwill",
+  "license": "MIT",
+  "icon": "resources/axon.png",
+  "repository": {
+    "url": "https://github.com/colwill/axon"
+  },
+  "engines": {
+    "vscode": "^1.93.0"
+  },
+  "categories": [
+    "AI",
+    "Chat"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "axon-sidebar",
+          "title": "AXON",
+          "icon": "resources/axon.svg"
+        }
+      ]
+    },
+    "views": {
+      "axon-sidebar": [
+        {
+          "type": "webview",
+          "id": "axon.chatView",
+          "name": "AXON Chat",
+          "canMoveView": false
+        }
+      ]
+    },
+    "chatParticipants": [
+      {
+        "id": "axon.chat",
+        "fullName": "AXON",
+        "name": "axon",
+        "description": "Translates your input to compact AXON notation, sends it to a language model, and returns the response. Saves tokens on every prompt.",
+        "isSticky": true
+      }
+    ],
+    "commands": [
+      {
+        "command": "axon.openChat",
+        "title": "AXON: Open Chat",
+        "icon": {
+          "light": "resources/axon.svg",
+          "dark": "resources/axon.svg"
+        }
+      },
+      {
+        "command": "axon.translate",
+        "title": "AXON: Translate to AXON"
+      },
+      {
+        "command": "axon.translateToClaudeCode",
+        "title": "AXON: Translate and Send to Claude Code"
+      },
+      {
+        "command": "axon.translateToCopilot",
+        "title": "AXON: Translate and Send to Copilot Chat"
+      },
+      {
+        "command": "axon.translateToClipboard",
+        "title": "AXON: Translate and Copy to Clipboard"
+      },
+      {
+        "command": "axon.openInNewTab",
+        "title": "AXON: Open Chat in Editor Tab"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "axon.openChat",
+          "group": "navigation"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "axon.openChat",
+        "key": "ctrl+shift+a",
+        "mac": "cmd+shift+a"
+      }
+    ],
+    "configuration": {
+      "title": "AXON",
+      "properties": {
+        "axon.defaultTarget": {
+          "type": "string",
+          "default": "chat",
+          "enum": [
+            "chat",
+            "clipboard",
+            "claudeCode",
+            "copilot"
+          ],
+          "description": "Default target for translated AXON output"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "node esbuild.config.mjs",
+    "watch": "node esbuild.config.mjs --watch",
+    "package": "npx @vscode/vsce package --no-dependencies --allow-missing-repository"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.93.0",
+    "esbuild": "^0.20.0",
+    "typescript": "^5.3.0"
+  }
+}

@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AXON — AI eXchange Optimized Notation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script>(function(){var t=localStorage.getItem('axon-theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:           #0d0d0d;
+            --surface:      #141414;
+            --border:       #222;
+            --border-sub:   #1a1a1a;
+            --text:         #e2e2e2;
+            --muted:        #666;
+            --accent:       #7c5cfc;
+            --output:       #a78bfa;
+            --positive:     #4ade80;
+            --placeholder:  #333;
+            --hint:         #333;
+            --prompt-text:  #888;
+            --scrollbar:    #2a2a2a;
+            --mono:         'JetBrains Mono', 'Fira Code', monospace;
+            --sans:         'Inter', system-ui, sans-serif;
+        }
+
+        [data-theme="light"] {
+            --bg:           #f5f5f5;
+            --surface:      #ffffff;
+            --border:       #e8e8e8;
+            --border-sub:   #f0f0f0;
+            --text:         #111111;
+            --muted:        #999;
+            --output:       #5b21b6;
+            --positive:     #16a34a;
+            --placeholder:  #bbb;
+            --hint:         #bbb;
+            --prompt-text:  #555;
+            --scrollbar:    #ddd;
+        }
+
+        body {
+            font-family: var(--sans);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 48px 24px 80px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .container { width: 100%; max-width: 720px; }
+
+        /* ── Header ── */
+        header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 40px;
+        }
+
+        .theme-toggle {
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 15px;
+            padding: 5px 9px;
+            line-height: 1;
+            transition: color 0.15s, border-color 0.15s;
+            flex-shrink: 0;
+            margin-top: 4px;
+        }
+        .theme-toggle:hover { color: var(--text); border-color: var(--muted); }
+
+        .logo {
+            font-family: var(--mono);
+            font-size: 22px;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+            color: var(--text);
+        }
+
+        .logo span { color: var(--accent); }
+
+        header p {
+            color: var(--muted);
+            font-size: 13px;
+            margin-top: 4px;
+            letter-spacing: 0.02em;
+        }
+
+        /* ── Tabs ── */
+        .tabs {
+            display: flex;
+            gap: 2px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 32px;
+        }
+
+        .tab {
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 10px 18px;
+            cursor: pointer;
+            color: var(--muted);
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            transition: color 0.15s, border-color 0.15s;
+            user-select: none;
+        }
+
+        .tab:hover { color: var(--text); }
+        .tab.active { color: var(--text); border-bottom-color: var(--accent); }
+
+        /* ── Panels ── */
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        /* ── Input block ── */
+        .input-block {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .block-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 10px;
+        }
+
+        textarea {
+            width: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            resize: none;
+            font-family: var(--sans);
+            font-size: 14px;
+            color: var(--text);
+            line-height: 1.7;
+            caret-color: var(--accent);
+        }
+
+        textarea::placeholder { color: var(--placeholder); }
+
+        .input-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-sub);
+        }
+
+        .hint { font-size: 11px; color: var(--hint); }
+
+        /* ── Buttons ── */
+        .btn {
+            font-family: var(--sans);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 7px 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.15s;
+        }
+
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-primary:hover { background: #6d4ee8; }
+        .btn-primary:active { transform: translateY(1px); }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--muted);
+            border: 1px solid var(--border);
+        }
+        .btn-ghost:hover { color: var(--text); border-color: #444; }
+
+        /* ── Output block ── */
+        .output-block {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 32px;
+        }
+
+        .output-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+        }
+
+        .savings-badge {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--positive);
+            background: rgba(74,222,128,0.08);
+            padding: 2px 8px;
+            border-radius: 999px;
+        }
+
+        .output-body { padding: 16px; min-height: 72px; }
+
+        #output-placeholder { color: #2e2e2e; font-size: 13px; font-style: italic; }
+
+        .output-input-line { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+
+        .output-axon {
+            font-family: var(--mono);
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--output);
+            letter-spacing: 0.03em;
+            margin-bottom: 6px;
+            word-break: break-all;
+        }
+
+        .output-annotation { font-size: 12px; color: #444; }
+
+        /* ── Example rows ── */
+        .section-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 12px;
+        }
+
+        .example-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.1s;
+            margin-bottom: 2px;
+        }
+
+        .example-row:hover { background: var(--surface); }
+        .example-arrow { color: #333; font-size: 12px; flex-shrink: 0; }
+        .example-text { font-size: 13px; color: #888; }
+
+        /* ── Spec panel ── */
+        .spec-section { margin-bottom: 36px; }
+
+        .spec-section-title {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sigil-grid { display: grid; grid-template-columns: 28px 140px 1fr; }
+
+        .sigil-row { display: contents; }
+
+        .sigil-row > * {
+            padding: 7px 0;
+            border-bottom: 1px solid var(--border-sub);
+            font-size: 13px;
+        }
+
+        .sigil-sym {
+            font-family: var(--mono);
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--accent);
+        }
+
+        .sigil-name { font-weight: 500; color: var(--text); padding-left: 12px; }
+        .sigil-desc { color: var(--muted); padding-left: 12px; }
+
+        .op-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
+
+        .op-item { display: flex; align-items: center; gap: 12px; padding: 7px 10px; border-radius: 5px; }
+        .op-sym { font-family: var(--mono); font-size: 15px; color: var(--accent); min-width: 20px; }
+        .op-name { font-weight: 500; font-size: 13px; }
+        .op-desc { color: var(--muted); font-size: 12px; }
+
+        .conf-grid { display: flex; flex-direction: column; gap: 2px; }
+
+        .conf-item { display: flex; align-items: center; gap: 16px; padding: 8px 10px; border-radius: 5px; }
+        .conf-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+        .conf-sym { font-family: var(--mono); font-size: 14px; font-weight: 500; min-width: 28px; }
+        .conf-name { font-weight: 500; font-size: 13px; min-width: 90px; }
+        .conf-desc { color: var(--muted); font-size: 12px; }
+
+        .temp-grid { display: flex; flex-direction: column; gap: 2px; }
+
+        .temp-item {
+            display: grid;
+            grid-template-columns: 140px 1fr;
+            gap: 16px;
+            padding: 7px 0;
+            border-bottom: 1px solid var(--border-sub);
+        }
+
+        .temp-sym { font-family: var(--mono); font-size: 13px; color: var(--output); }
+        .temp-desc { color: var(--muted); font-size: 13px; }
+
+        /* ── Examples panel ── */
+        .example-card {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .example-card-input {
+            padding: 12px 16px;
+            font-size: 13px;
+            color: var(--muted);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .example-card-axon {
+            padding: 12px 16px;
+            font-family: var(--mono);
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--output);
+            background: var(--surface);
+            letter-spacing: 0.02em;
+        }
+
+        .example-card-note {
+            padding: 8px 16px;
+            font-size: 12px;
+            color: #3a3a3a;
+            background: var(--surface);
+        }
+
+        /* ── Prompt panel ── */
+        .prompt-actions { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+
+        #copy-confirm { font-size: 12px; color: var(--positive); }
+
+        #llm-prompt {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--prompt-text);
+            line-height: 1.7;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        #llm-prompt::-webkit-scrollbar { width: 4px; }
+        #llm-prompt::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 2px; }
+
+        .footer-link {
+            font-size: 12px;
+            color: var(--muted);
+            text-decoration: none;
+            letter-spacing: 0.04em;
+            transition: color 0.15s;
+        }
+        .footer-link:hover { color: var(--text); }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <header>
+            <div>
+                <div class="logo">AX<span>ON</span></div>
+                <p>AI eXchange Optimized Notation &mdash; v1.0</p>
+            </div>
+            <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle theme"></button>
+        </header>
+
+        <nav class="tabs">
+            <div class="tab active" onclick="switchTab('translate')" id="tab-translate">Translate</div>
+            <div class="tab" onclick="switchTab('spec')" id="tab-spec">Spec</div>
+            <div class="tab" onclick="switchTab('examples')" id="tab-examples">Examples</div>
+            <div class="tab" onclick="switchTab('prompt')" id="tab-prompt">LLM Prompt</div>
+        </nav>
+
+        <!-- TRANSLATE PANEL -->
+        <div class="panel active" id="panel-translate">
+            <div class="input-block">
+                <div class="block-label">Input</div>
+                <textarea id="input-text" rows="4" placeholder="Write your thought in natural language..."></textarea>
+                <div class="input-footer">
+                    <span class="hint">Ctrl+Enter to translate</span>
+                    <button class="btn btn-primary" onclick="doTranslate()">Translate</button>
+                </div>
+            </div>
+
+            <div class="output-block">
+                <div class="output-header">
+                    <span class="block-label" style="margin:0;">AXON Output</span>
+                    <span class="savings-badge" id="savings-badge" style="display:none;"></span>
+                </div>
+                <div class="output-body" id="output-area">
+                    <div id="output-placeholder">// output appears here</div>
+                </div>
+            </div>
+
+            <div>
+                <div class="section-label">Quick Examples</div>
+                <div class="example-row" onclick="setExample('The sun probably emits ultraviolet radiation.')">
+                    <span class="example-arrow">›</span>
+                    <span class="example-text">The sun probably emits ultraviolet radiation.</span>
+                </div>
+                <div class="example-row" onclick="setExample('All living organisms require energy to survive.')">
+                    <span class="example-arrow">›</span>
+                    <span class="example-text">All living organisms require energy to survive.</span>
+                </div>
+                <div class="example-row" onclick="setExample('Climate change caused by CO2 emissions leads to rising temperatures.')">
+                    <span class="example-arrow">›</span>
+                    <span class="example-text">Climate change caused by CO2 emissions leads to rising temperatures.</span>
+                </div>
+                <div class="example-row" onclick="setExample('There is no evidence that this treatment works.')">
+                    <span class="example-arrow">›</span>
+                    <span class="example-text">There is no evidence that this treatment works.</span>
+                </div>
+                <div class="example-row" onclick="setExample('I am uncertain whether this prediction will come true next month.')">
+                    <span class="example-arrow">›</span>
+                    <span class="example-text">I am uncertain whether this prediction will come true next month.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SPEC PANEL -->
+        <div class="panel" id="panel-spec">
+
+            <div class="spec-section">
+                <div class="spec-section-title">Type Sigils</div>
+                <div class="sigil-grid">
+                    <div class="sigil-row"><span class="sigil-sym">@</span><span class="sigil-name">Entity / Agent</span><span class="sigil-desc">Named actor, system, or proper noun</span></div>
+                    <div class="sigil-row"><span class="sigil-sym">#</span><span class="sigil-name">Concept / Abstract</span><span class="sigil-desc">Idea, category, or domain</span></div>
+                    <div class="sigil-row"><span class="sigil-sym">~</span><span class="sigil-name">Process / Action</span><span class="sigil-desc">Verb, transformation, or operation</span></div>
+                    <div class="sigil-row"><span class="sigil-sym">?</span><span class="sigil-name">Query / Unknown</span><span class="sigil-desc">Open question or unresolved value</span></div>
+                    <div class="sigil-row"><span class="sigil-sym">!</span><span class="sigil-name">Assert</span><span class="sigil-desc">High-confidence factual claim</span></div>
+                    <div class="sigil-row"><span class="sigil-sym">%</span><span class="sigil-name">Quantifier</span><span class="sigil-desc">Proportion, count, or frequency</span></div>
+                    <div class="sigil-row"><span class="sigil-sym">^</span><span class="sigil-name">Temporal</span><span class="sigil-desc">Time reference or duration</span></div>
+                    <div class="sigil-row"><span class="sigil-sym">$</span><span class="sigil-name">Scalar</span><span class="sigil-desc">Measurable value or magnitude</span></div>
+                    <div class="sigil-row"><span class="sigil-sym">&asymp;</span><span class="sigil-name">Approximate</span><span class="sigil-desc">Fuzzy match or rough equivalence</span></div>
+                    <div class="sigil-row"><span class="sigil-sym">&empty;</span><span class="sigil-name">Null / Absent</span><span class="sigil-desc">Absence, void, or negated entity</span></div>
+                </div>
+            </div>
+
+            <div class="spec-section">
+                <div class="spec-section-title">Logical Operators</div>
+                <div class="op-grid">
+                    <div class="op-item"><span class="op-sym">&rarr;</span><span><span class="op-name">Causes</span> <span class="op-desc">— leads to</span></span></div>
+                    <div class="op-item"><span class="op-sym">&larr;</span><span><span class="op-name">Result of</span> <span class="op-desc">— caused by</span></span></div>
+                    <div class="op-item"><span class="op-sym">&harr;</span><span><span class="op-name">Mutual</span> <span class="op-desc">— bidirectional</span></span></div>
+                    <div class="op-item"><span class="op-sym">&equiv;</span><span><span class="op-name">Equals</span> <span class="op-desc">— definitional</span></span></div>
+                    <div class="op-item"><span class="op-sym">&there4;</span><span><span class="op-name">Therefore</span> <span class="op-desc">— conclusion</span></span></div>
+                    <div class="op-item"><span class="op-sym">&because;</span><span><span class="op-name">Because</span> <span class="op-desc">— premise</span></span></div>
+                    <div class="op-item"><span class="op-sym">&not;</span><span><span class="op-name">Not</span> <span class="op-desc">— negation</span></span></div>
+                    <div class="op-item"><span class="op-sym">&and;</span><span><span class="op-name">And</span> <span class="op-desc">— conjunction</span></span></div>
+                    <div class="op-item"><span class="op-sym">&or;</span><span><span class="op-name">Or</span> <span class="op-desc">— disjunction</span></span></div>
+                    <div class="op-item"><span class="op-sym">&sup;</span><span><span class="op-name">Contains</span> <span class="op-desc">— subset</span></span></div>
+                    <div class="op-item"><span class="op-sym">&forall;</span><span><span class="op-name">For All</span> <span class="op-desc">— universal</span></span></div>
+                    <div class="op-item"><span class="op-sym">&exist;</span><span><span class="op-name">Exists</span> <span class="op-desc">— existential</span></span></div>
+                    <div class="op-item"><span class="op-sym">&Delta;</span><span><span class="op-name">Delta</span> <span class="op-desc">— change</span></span></div>
+                    <div class="op-item"><span class="op-sym">&sum;</span><span><span class="op-name">Sum</span> <span class="op-desc">— aggregate</span></span></div>
+                    <div class="op-item"><span class="op-sym">&oplus;</span><span><span class="op-name">Xor</span> <span class="op-desc">— exclusive or</span></span></div>
+                </div>
+            </div>
+
+            <div class="spec-section">
+                <div class="spec-section-title">Confidence Markers</div>
+                <div class="conf-grid">
+                    <div class="conf-item"><span class="conf-dot" style="background:#a78bfa;"></span><span class="conf-sym" style="color:#a78bfa;">!!</span><span class="conf-name">Certain</span><span class="conf-desc">Verified fact, no doubt</span></div>
+                    <div class="conf-item"><span class="conf-dot" style="background:#818cf8;"></span><span class="conf-sym" style="color:#818cf8;">!</span><span class="conf-name">High</span><span class="conf-desc">Strong supporting evidence</span></div>
+                    <div class="conf-item"><span class="conf-dot" style="background:#60a5fa;"></span><span class="conf-sym" style="color:#60a5fa;">~</span><span class="conf-name">Moderate</span><span class="conf-desc">Plausible, some uncertainty</span></div>
+                    <div class="conf-item"><span class="conf-dot" style="background:#34d399;"></span><span class="conf-sym" style="color:#34d399;">*</span><span class="conf-name">Low</span><span class="conf-desc">Weak evidence or guess</span></div>
+                    <div class="conf-item"><span class="conf-dot" style="background:#94a3b8;"></span><span class="conf-sym" style="color:#94a3b8;">**</span><span class="conf-name">Speculative</span><span class="conf-desc">Hypothetical or extrapolated</span></div>
+                </div>
+            </div>
+
+            <div class="spec-section">
+                <div class="spec-section-title">Temporal Markers</div>
+                <div class="temp-grid">
+                    <div class="temp-item"><span class="temp-sym">^now</span><span class="temp-desc">The current moment</span></div>
+                    <div class="temp-item"><span class="temp-sym">^T-Nd</span><span class="temp-desc">N days in the past — e.g. ^T-7d = last week</span></div>
+                    <div class="temp-item"><span class="temp-sym">^T+Nd</span><span class="temp-desc">N days in the future — e.g. ^T+30d = next month</span></div>
+                    <div class="temp-item"><span class="temp-sym">^&forall;t</span><span class="temp-desc">All time — universally true</span></div>
+                    <div class="temp-item"><span class="temp-sym">^span[A,B]</span><span class="temp-desc">Time range from A to B</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EXAMPLES PANEL -->
+        <div class="panel" id="panel-examples">
+            <div class="example-card">
+                <div class="example-card-input">"The sun probably emits ultraviolet radiation."</div>
+                <div class="example-card-axon">@sun ~emit* #UV-radiation</div>
+                <div class="example-card-note">Entity + process + uncertain confidence + concept</div>
+            </div>
+            <div class="example-card">
+                <div class="example-card-input">"All living things require energy to survive."</div>
+                <div class="example-card-axon">&forall;@organism &sup; (#energy &rarr; #survival!!)</div>
+                <div class="example-card-note">Universal quantifier + set logic + causal chain + certainty</div>
+            </div>
+            <div class="example-card">
+                <div class="example-card-input">"I don't know if this claim is true."</div>
+                <div class="example-card-axon">?? #claim &equiv; !true</div>
+                <div class="example-card-note">Double-query on assertion of truth</div>
+            </div>
+            <div class="example-card">
+                <div class="example-card-input">"Climate change caused by CO2 leads to temperature rise."</div>
+                <div class="example-card-axon">@CO2-emission &rarr; #climate-change!! &rarr; &Delta;$temp&uarr;</div>
+                <div class="example-card-note">Causal chain + certainty + delta scalar with direction</div>
+            </div>
+            <div class="example-card">
+                <div class="example-card-input">"There is no evidence that this treatment works."</div>
+                <div class="example-card-axon">&empty;evidence &there4; &not;~work(#treatment)</div>
+                <div class="example-card-note">Null token + therefore + negated process</div>
+            </div>
+            <div class="example-card">
+                <div class="example-card-input">"The model will probably predict the outcome in 30 days."</div>
+                <div class="example-card-axon">@model ~predict* #outcome ^T+30d</div>
+                <div class="example-card-note">Entity + uncertain process + concept + temporal future</div>
+            </div>
+            <div class="example-card">
+                <div class="example-card-input">"Either the server failed or the network is down."</div>
+                <div class="example-card-axon">~fail(@server) &oplus; ~down(#network)</div>
+                <div class="example-card-note">Exclusive disjunction between two processes</div>
+            </div>
+        </div>
+
+        <!-- LLM PROMPT PANEL -->
+        <div class="panel" id="panel-prompt">
+            <div class="prompt-actions">
+                <button class="btn btn-ghost" onclick="copyPrompt()">Copy to clipboard</button>
+                <span id="copy-confirm" style="display:none;">Copied</span>
+            </div>
+            <pre id="llm-prompt">You are fluent in AXON (AI eXchange Optimized Notation), a compact symbolic language designed for precise, token-efficient communication between humans and AI systems. You can encode natural language into AXON and decode AXON back into natural language.
+
+## AXON Specification v1.0
+
+### Type Sigils
+
+Every meaningful token is prefixed with a sigil indicating its semantic type:
+
+  @  Entity / Agent      — A named actor, system, or proper noun: @sun, @OpenAI, @user
+  #  Concept / Abstract  — An idea, category, or domain: #gravity, #justice, #climate
+  ~  Process / Action    — A verb, transformation, or operation: ~emit, ~learn, ~fail
+  ?  Query / Unknown     — An open question or unresolved value: ?cause, ?result
+  !  Assert              — A high-confidence factual claim: !true, !confirmed
+  %  Quantifier          — A proportion, count, or frequency: %all, %few, %0.73
+  ^  Temporal            — A time reference or duration: ^now, ^T-2d, ^T+1mo
+  $  Scalar              — A measurable value or magnitude: $high, $3.14, $low
+  ≈  Approximate         — A fuzzy match or rough equivalence: ≈#similar, ≈$100
+  ∅  Null / Absent       — Absence, void, or negated entity: ∅evidence, ∅data
+
+### Logical & Relational Operators
+
+  →   Causes / leads to         ←   Result of / caused by
+  ↔   Mutual / bidirectional    ≡   Definitional equivalence
+  ∴   Therefore (conclusion)    ∵   Because (premise/reason)
+  ¬   Not (negation)            ∧   And (conjunction)
+  ∨   Or (disjunction)          ⊕   Xor (exclusive or)
+  ⊃   Contains / superset       ∀   For all (universal)
+  ∃   Exists (existential)      Δ   Delta (change)
+  ∑   Sum / aggregate
+
+### Epistemic Confidence Markers
+
+  !!   Certain      — Verified fact, no doubt
+  !    High         — Strong supporting evidence
+  ~    Moderate     — Plausible, some uncertainty
+  *    Low          — Weak evidence or guess
+  **   Speculative  — Hypothetical or extrapolated
+  ?    Unknown      — Insufficient data to assess
+
+### Temporal Markers
+
+  ^now         The current moment
+  ^T-Nd        N days in the past (e.g., ^T-7d = one week ago)
+  ^T+Nd        N days in the future (e.g., ^T+30d = next month)
+  ^T+Nmo       N months in the future
+  ^T-Ny        N years in the past
+  ^∀t          All time — universally/always true
+  ^span[A,B]   Time range from A to B
+
+### Grammar Pattern
+
+  [QUANTIFIER] [SUBJECT sigil+name] [OPERATOR] [OBJECT sigil+name] [CONFIDENCE] [TEMPORAL]
+
+Parentheses group sub-expressions: ~fail(@server) ⊕ ~down(#network)
+Multi-word tokens use hyphens: #climate-change, @milky-way
+
+### Encoding Rules (Natural Language → AXON)
+
+1. Identify named entities, people, systems, organizations → prefix with @
+2. Identify abstract concepts, ideas, categories, domains → prefix with #
+3. Identify verbs, actions, processes, transformations → prefix with ~
+4. Identify numeric values, measurements, magnitudes → prefix with $
+5. Detect causal relationships → use → or ←
+6. Detect logical connectives (and/or/therefore/because) → use ∧ ∨ ∴ ∵
+7. Detect negation (not, no evidence, without, absence) → use ¬ or ∅
+8. Detect universal/existential quantifiers (all, every, some) → use ∀ ∃
+9. Extract confidence level from hedge words → append confidence marker
+10. Extract time references → append temporal marker
+11. Strip filler words, articles, copulas, and social pleasantries
+12. Hyphenate multi-word tokens: "climate change" → #climate-change
+
+### Decoding Rules (AXON → Natural Language)
+
+1. @ tokens → named entities
+2. # tokens → concepts or abstract nouns
+3. ~ tokens → verbs (conjugate naturally for context)
+4. $ tokens → numeric values or scalar descriptors
+5. → reads as "causes" or "leads to"
+6. ← reads as "is caused by" or "results from"
+7. ∴ reads as "therefore" · ∵ reads as "because"
+8. ¬ reads as "not" · ∅ reads as "no [noun]" or "absence of"
+9. ∀ reads as "all" or "every" · ∃ reads as "there exists"
+10. ∧ reads as "and" · ∨ reads as "or" · ⊕ reads as "either...or (but not both)"
+11. Confidence markers → hedge words (!! = "certainly", * = "probably", ** = "possibly")
+12. Temporal markers → time phrases (^now = "currently", ^T+30d = "in 30 days")
+
+### Examples
+
+  "The sun probably emits ultraviolet radiation."
+  → @sun ~emit* #UV-radiation
+
+  "All living things require energy to survive."
+  → ∀@organism ⊃ (#energy → #survival!!)
+
+  "Climate change caused by CO2 leads to temperature rise."
+  → @CO2-emission → #climate-change!! → Δ$temp↑
+
+  "There is no evidence that this treatment works."
+  → ∅evidence ∴ ¬~work(#treatment)
+
+## Behavior
+
+When the user writes in natural language, respond in AXON unless asked otherwise.
+When the user writes in AXON, decode it to natural language and respond.
+Always aim for semantic precision and token efficiency.</pre>
+        </div>
+
+    </div>
+
+    <footer style="margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--border); text-align: center;">
+        <a class="footer-link" href="https://github.com/colwill" target="_blank" rel="noopener">
+            github.com/colwill
+        </a>
+    </footer>
+
+    <script type="module">
+        import init, { AxonTranslator } from './pkg/axon.js';
+
+        let translator = null;
+
+        init().then(() => {
+            translator = new AxonTranslator();
+        }).catch(err => {
+            console.error('Failed to load WASM:', err);
+            document.getElementById('output-placeholder').textContent =
+                '// Error loading engine. Check the console.';
+        });
+
+        function htmlEscape(s) {
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function applyTheme(t) {
+            document.documentElement.setAttribute('data-theme', t);
+            document.getElementById('theme-toggle').textContent = t === 'light' ? '☾' : '☀';
+        }
+
+        window.toggleTheme = function() {
+            const next = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            localStorage.setItem('axon-theme', next);
+            applyTheme(next);
+        };
+
+        applyTheme(localStorage.getItem('axon-theme') || 'dark');
+
+        window.doTranslate = function() {
+            const input = document.getElementById('input-text').value.trim();
+            if (!input) return;
+
+            if (!translator) {
+                document.getElementById('output-area').innerHTML =
+                    '<div style="color:#3a3a3a;font-size:13px;font-style:italic;">Engine loading, please try again in a moment.</div>';
+                return;
+            }
+
+            const result = translator.translate(input);
+            const badge = document.getElementById('savings-badge');
+
+            if (result.savings > 0) {
+                badge.textContent = `−${result.savings}% tokens`;
+                badge.style.display = 'inline';
+            } else {
+                badge.style.display = 'none';
+            }
+
+            document.getElementById('output-area').innerHTML = `
+                <div class="output-input-line">↳ ${htmlEscape(input)}</div>
+                <div class="output-axon">${htmlEscape(result.axon)}</div>
+                <div class="output-annotation">${htmlEscape(result.annotation)}</div>`;
+
+            result.free();
+        };
+
+        window.switchTab = function(name) {
+            ['translate', 'spec', 'examples', 'prompt'].forEach(t => {
+                document.getElementById('panel-' + t).classList.toggle('active', t === name);
+                document.getElementById('tab-' + t).classList.toggle('active', t === name);
+            });
+        };
+
+        window.copyPrompt = function() {
+            const text = document.getElementById('llm-prompt').innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                const el = document.getElementById('copy-confirm');
+                el.style.display = 'inline';
+                setTimeout(() => el.style.display = 'none', 2000);
+            });
+        };
+
+        window.setExample = function(text) {
+            document.getElementById('input-text').value = text;
+            switchTab('translate');
+            document.getElementById('input-text').focus();
+        };
+
+        document.addEventListener('keydown', e => {
+            if (e.ctrlKey && e.key === 'Enter') window.doTranslate();
+        });
+    </script>
+</body>
+</html>
