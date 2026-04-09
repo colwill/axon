@@ -1126,7 +1126,11 @@ function getChatHtml() {
           '<div class="msg-response"><span class="spinner"></span></div>';
       } else if (msg.type === 'response-stream') {
         const respEl = currentResponseEl.querySelector('.msg-response');
-        if (respEl) respEl.innerHTML = renderMarkdown(msg.text);
+        if (respEl) {
+          respEl.innerHTML = renderMarkdown(msg.text);
+        } else {
+          currentResponseEl.innerHTML = renderMarkdown(msg.text);
+        }
       } else if (msg.type === 'response-done') {
         const spinner = currentResponseEl.querySelector('.spinner');
         if (spinner) spinner.remove();

@@ -1,2 +1,6 @@
 target/
 bin/
+.claude/
+axon-agent/
+.venv/
+vscode-extension/

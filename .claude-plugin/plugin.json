@@ -1,0 +1,13 @@
+{
+  "name": "axon",
+  "version": "1.0.0",
+  "description": "AXON (AI eXchange Optimized Notation) — a compact symbolic language for compressing natural language into token-efficient AI expressions. Encode, decode, validate, and explain AXON notation.",
+  "author": {
+    "name": "colwill",
+    "url": "https://github.com/colwill"
+  },
+  "homepage": "https://colwill.github.io/axon/",
+  "repository": "https://github.com/colwill/axon",
+  "license": "MIT",
+  "keywords": ["axon", "notation", "compression", "tokens", "nlp", "symbolic"]
+}
