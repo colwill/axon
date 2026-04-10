@@ -83,6 +83,7 @@
                 <div class="mb-6">
                     <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 mb-2">Getting Started</p>
                     <button @click="go('playground')" class="nav-item block w-full text-left px-3 py-1.5 rounded-md" :class="section === 'playground' && 'active'">Playground</button>
+                    <button @click="go('vnext')" class="nav-item block w-full text-left px-3 py-1.5 rounded-md" :class="section === 'vnext' && 'active'">vNext</button>
                 </div>
                 <div class="mb-6">
                     <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 mb-2">Reference</p>
@@ -168,6 +169,324 @@
                     <div class="text-center p-4 rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200">
                         <div class="text-2xl font-bold text-white dark:text-white text-gray-900">0</div>
                         <div class="text-xs text-gray-500 mt-1">Network requests</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══ VNEXT ═══ -->
+            <section x-show="section === 'vnext'" x-transition class="fade-in">
+                <h1 class="text-3xl font-bold text-white dark:text-white text-gray-900 mb-2">vNext</h1>
+                <p class="text-gray-400 dark:text-gray-400 text-gray-600 mb-8 text-lg">What's coming next for AXON — from prompt compression to native model understanding.</p>
+
+                <!-- Architecture diagram: AXON + Fine-tuned Model -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Fine-Tuned AXON Architecture</h2>
+                    <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 mb-4">Today, AXON compresses prompts and relies on the base model to interpret notation via a system prompt. A fine-tuned model eliminates the system prompt overhead entirely and gains efficiency at every stage of inference.</p>
+                    <div class="rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200 bg-axon-surface dark:bg-axon-surface bg-gray-50 p-4 overflow-x-auto">
+                        <svg viewBox="0 0 880 730" class="w-full" style="min-width:720px" xmlns="http://www.w3.org/2000/svg" font-family="'JetBrains Mono',monospace">
+                            <defs>
+                                <marker id="ft-arrow" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-auto"><path d="M0,0 L10,3.5 L0,7z" fill="#555"/></marker>
+                                <marker id="ft-arrow-p" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-auto"><path d="M0,0 L10,3.5 L0,7z" fill="#7c5cfc"/></marker>
+                                <marker id="ft-arrow-g" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-auto"><path d="M0,0 L10,3.5 L0,7z" fill="#4ade80"/></marker>
+                                <linearGradient id="ft-today-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7c5cfc" stop-opacity="0.08"/><stop offset="100%" stop-color="#7c5cfc" stop-opacity="0.02"/></linearGradient>
+                                <linearGradient id="ft-next-bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4ade80" stop-opacity="0.08"/><stop offset="100%" stop-color="#4ade80" stop-opacity="0.02"/></linearGradient>
+                            </defs>
+
+                            <!-- ════════════ TODAY: SYSTEM PROMPT APPROACH ════════════ -->
+                            <text x="440" y="24" text-anchor="middle" fill="#888" font-size="10" font-weight="600" letter-spacing="0.15em">TODAY — SYSTEM PROMPT</text>
+                            <rect x="16" y="34" width="848" height="280" rx="12" fill="url(#ft-today-bg)" stroke="#7c5cfc" stroke-width="1" stroke-opacity="0.2"/>
+
+                            <!-- User prompt -->
+                            <rect x="36" y="70" width="120" height="52" rx="8" fill="#1e1e1e" stroke="#333" stroke-width="1"/>
+                            <text x="96" y="92" text-anchor="middle" fill="#e5e5e5" font-size="10" font-weight="600">User Prompt</text>
+                            <text x="96" y="106" text-anchor="middle" fill="#888" font-size="8">natural language</text>
+                            <rect x="68" y="127" width="56" height="18" rx="9" fill="#1e1e1e" stroke="#555" stroke-width="0.5"/>
+                            <text x="96" y="140" text-anchor="middle" fill="#999" font-size="8">105 tok</text>
+
+                            <!-- Arrow -->
+                            <line x1="156" y1="96" x2="186" y2="96" stroke="#555" stroke-width="1.5" marker-end="url(#ft-arrow)"/>
+
+                            <!-- AXON Translator -->
+                            <rect x="190" y="70" width="100" height="52" rx="8" fill="#7c5cfc" fill-opacity="0.12" stroke="#7c5cfc" stroke-width="1.5"/>
+                            <text x="240" y="92" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="700">AXON</text>
+                            <text x="240" y="106" text-anchor="middle" fill="#7c5cfc" font-size="8" opacity="0.8">-35% prompt</text>
+                            <rect x="212" y="127" width="56" height="18" rx="9" fill="#1e1e1e" stroke="#7c5cfc" stroke-width="0.5"/>
+                            <text x="240" y="140" text-anchor="middle" fill="#a78bfa" font-size="8">68 tok</text>
+
+                            <!-- Arrow -->
+                            <line x1="290" y1="96" x2="320" y2="96" stroke="#7c5cfc" stroke-width="1.5" marker-end="url(#ft-arrow-p)"/>
+
+                            <!-- System prompt (the cost) -->
+                            <rect x="324" y="55" width="112" height="30" rx="6" fill="#f59e0b" fill-opacity="0.1" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3,3"/>
+                            <text x="380" y="74" text-anchor="middle" fill="#f59e0b" font-size="8" font-weight="600">system prompt ~500 tok</text>
+
+                            <!-- Concat bracket -->
+                            <rect x="324" y="88" width="112" height="34" rx="6" fill="#1e1e1e" stroke="#444" stroke-width="1"/>
+                            <text x="380" y="104" text-anchor="middle" fill="#e5e5e5" font-size="9" font-weight="600">Concat</text>
+                            <text x="380" y="116" text-anchor="middle" fill="#888" font-size="7">prompt + sys prompt</text>
+
+                            <rect x="346" y="127" width="68" height="18" rx="9" fill="#1e1e1e" stroke="#f59e0b" stroke-width="0.5"/>
+                            <text x="380" y="140" text-anchor="middle" fill="#f59e0b" font-size="8">~568 tok</text>
+
+                            <!-- Arrow down to model -->
+                            <line x1="380" y1="150" x2="380" y2="172" stroke="#555" stroke-width="1.5" marker-end="url(#ft-arrow)"/>
+
+                            <!-- Base model -->
+                            <rect x="330" y="176" width="100" height="52" rx="8" fill="#1e1e1e" stroke="#555" stroke-width="1.5"/>
+                            <text x="380" y="198" text-anchor="middle" fill="#e5e5e5" font-size="11" font-weight="700">Base LLM</text>
+                            <text x="380" y="214" text-anchor="middle" fill="#888" font-size="8">interprets AXON</text>
+                            <text x="380" y="224" text-anchor="middle" fill="#666" font-size="7">via system prompt</text>
+
+                            <!-- Arrow to response -->
+                            <line x1="430" y1="202" x2="530" y2="202" stroke="#555" stroke-width="1.5" marker-end="url(#ft-arrow)"/>
+
+                            <!-- Response -->
+                            <rect x="534" y="176" width="120" height="52" rx="8" fill="#1e1e1e" stroke="#333" stroke-width="1"/>
+                            <text x="594" y="198" text-anchor="middle" fill="#e5e5e5" font-size="10" font-weight="600">Response</text>
+                            <text x="594" y="212" text-anchor="middle" fill="#888" font-size="8">natural language</text>
+
+                            <!-- Cost callout -->
+                            <rect x="680" y="70" width="160" height="72" rx="8" fill="#1e1e1e" stroke="#f59e0b" stroke-width="1" stroke-opacity="0.4"/>
+                            <text x="760" y="90" text-anchor="middle" fill="#f59e0b" font-size="9" font-weight="600">Overhead</text>
+                            <text x="760" y="106" text-anchor="middle" fill="#888" font-size="8">System prompt parsed</text>
+                            <text x="760" y="118" text-anchor="middle" fill="#888" font-size="8">every request: ~500 tok</text>
+                            <text x="760" y="132" text-anchor="middle" fill="#888" font-size="8">Attention cost: O(n&sup2;)</text>
+
+                            <!-- Attention cost label -->
+                            <rect x="680" y="190" width="160" height="30" rx="6" fill="#1e1e1e" stroke="#555" stroke-width="0.5"/>
+                            <text x="760" y="209" text-anchor="middle" fill="#999" font-size="9">Context: 568 + response tok</text>
+
+                            <!-- ════════════ VNEXT: FINE-TUNED MODEL ════════════ -->
+                            <text x="440" y="348" text-anchor="middle" fill="#4ade80" font-size="10" font-weight="600" letter-spacing="0.15em">VNEXT — FINE-TUNED ON AXON</text>
+                            <rect x="16" y="358" width="848" height="360" rx="12" fill="url(#ft-next-bg)" stroke="#4ade80" stroke-width="1" stroke-opacity="0.2"/>
+
+                            <!-- User prompt -->
+                            <rect x="36" y="394" width="120" height="52" rx="8" fill="#1e1e1e" stroke="#333" stroke-width="1"/>
+                            <text x="96" y="416" text-anchor="middle" fill="#e5e5e5" font-size="10" font-weight="600">User Prompt</text>
+                            <text x="96" y="430" text-anchor="middle" fill="#888" font-size="8">natural language</text>
+                            <rect x="68" y="451" width="56" height="18" rx="9" fill="#1e1e1e" stroke="#555" stroke-width="0.5"/>
+                            <text x="96" y="464" text-anchor="middle" fill="#999" font-size="8">105 tok</text>
+
+                            <!-- Arrow -->
+                            <line x1="156" y1="420" x2="186" y2="420" stroke="#555" stroke-width="1.5" marker-end="url(#ft-arrow)"/>
+
+                            <!-- AXON Translator -->
+                            <rect x="190" y="394" width="100" height="52" rx="8" fill="#7c5cfc" fill-opacity="0.12" stroke="#7c5cfc" stroke-width="1.5"/>
+                            <text x="240" y="416" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="700">AXON</text>
+                            <text x="240" y="430" text-anchor="middle" fill="#7c5cfc" font-size="8" opacity="0.8">-35% prompt</text>
+                            <rect x="212" y="451" width="56" height="18" rx="9" fill="#1e1e1e" stroke="#7c5cfc" stroke-width="0.5"/>
+                            <text x="240" y="464" text-anchor="middle" fill="#a78bfa" font-size="8">68 tok</text>
+
+                            <!-- Arrow direct to model (NO system prompt) -->
+                            <line x1="290" y1="420" x2="350" y2="420" stroke="#4ade80" stroke-width="2" marker-end="url(#ft-arrow-g)"/>
+
+                            <!-- Eliminated system prompt (crossed out) -->
+                            <rect x="306" y="382" width="90" height="24" rx="6" fill="#1e1e1e" stroke="#555" stroke-width="0.5" stroke-dasharray="3,3" opacity="0.4"/>
+                            <text x="351" y="398" text-anchor="middle" fill="#666" font-size="8" text-decoration="line-through">sys prompt</text>
+                            <text x="400" y="398" fill="#4ade80" font-size="10" font-weight="700">0 tok</text>
+
+                            <!-- Fine-tuned model -->
+                            <rect x="354" y="400" width="132" height="64" rx="10" fill="#4ade80" fill-opacity="0.08" stroke="#4ade80" stroke-width="1.5"/>
+                            <text x="420" y="420" text-anchor="middle" fill="#4ade80" font-size="11" font-weight="700">Fine-Tuned LLM</text>
+                            <text x="420" y="436" text-anchor="middle" fill="#4ade80" font-size="8" opacity="0.8">AXON is native</text>
+                            <text x="420" y="449" text-anchor="middle" fill="#4ade80" font-size="8" opacity="0.6">no prompt overhead</text>
+
+                            <!-- Arrow to AXON response -->
+                            <line x1="486" y1="432" x2="544" y2="432" stroke="#4ade80" stroke-width="1.5" marker-end="url(#ft-arrow-g)"/>
+
+                            <!-- Response in AXON notation -->
+                            <rect x="548" y="400" width="130" height="64" rx="8" fill="#7c5cfc" fill-opacity="0.08" stroke="#7c5cfc" stroke-width="1"/>
+                            <text x="613" y="420" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="600">AXON Response</text>
+                            <text x="613" y="436" text-anchor="middle" fill="#7c5cfc" font-size="8" opacity="0.8">compact notation</text>
+                            <text x="613" y="449" text-anchor="middle" fill="#7c5cfc" font-size="8" opacity="0.6">fewer output tokens</text>
+
+                            <!-- Arrow to decoder -->
+                            <line x1="613" y1="464" x2="613" y2="494" stroke="#7c5cfc" stroke-width="1.5" marker-end="url(#ft-arrow-p)"/>
+
+                            <!-- Client-side decoder -->
+                            <rect x="553" y="498" width="120" height="44" rx="8" fill="#1e1e1e" stroke="#7c5cfc" stroke-width="1"/>
+                            <text x="613" y="518" text-anchor="middle" fill="#a78bfa" font-size="9" font-weight="600">AXON Decoder</text>
+                            <text x="613" y="532" text-anchor="middle" fill="#888" font-size="7">client-side, 0 API cost</text>
+
+                            <!-- Arrow to final response -->
+                            <line x1="613" y1="542" x2="613" y2="566" stroke="#555" stroke-width="1.5" marker-end="url(#ft-arrow)"/>
+
+                            <!-- Final response -->
+                            <rect x="553" y="570" width="120" height="44" rx="8" fill="#1e1e1e" stroke="#333" stroke-width="1"/>
+                            <text x="613" y="590" text-anchor="middle" fill="#e5e5e5" font-size="10" font-weight="600">Response</text>
+                            <text x="613" y="604" text-anchor="middle" fill="#888" font-size="8">natural language</text>
+
+                            <!-- Gains callout -->
+                            <rect x="36" y="500" width="480" height="160" rx="10" fill="#1e1e1e" stroke="#4ade80" stroke-width="1" stroke-opacity="0.3"/>
+                            <text x="56" y="524" fill="#4ade80" font-size="10" font-weight="700">Efficiency Gains with Fine-Tuning</text>
+
+                            <!-- Gain 1 -->
+                            <circle cx="56" cy="548" r="5" fill="#4ade80" fill-opacity="0.2" stroke="#4ade80" stroke-width="1"/>
+                            <text x="56" y="552" text-anchor="middle" fill="#4ade80" font-size="8" font-weight="700">1</text>
+                            <text x="70" y="545" fill="#e5e5e5" font-size="9" font-weight="600">Zero system prompt overhead</text>
+                            <text x="70" y="558" fill="#888" font-size="8">Eliminates ~500 tokens per request. Model natively understands AXON.</text>
+
+                            <!-- Gain 2 -->
+                            <circle cx="56" cy="580" r="5" fill="#4ade80" fill-opacity="0.2" stroke="#4ade80" stroke-width="1"/>
+                            <text x="56" y="584" text-anchor="middle" fill="#4ade80" font-size="8" font-weight="700">2</text>
+                            <text x="70" y="577" fill="#e5e5e5" font-size="9" font-weight="600">Smaller attention window</text>
+                            <text x="70" y="590" fill="#888" font-size="8">68 input tokens vs 568. Quadratic attention savings: O(68&sup2;) vs O(568&sup2;) = 70x less compute.</text>
+
+                            <!-- Gain 3 -->
+                            <circle cx="56" cy="612" r="5" fill="#4ade80" fill-opacity="0.2" stroke="#4ade80" stroke-width="1"/>
+                            <text x="56" y="616" text-anchor="middle" fill="#4ade80" font-size="8" font-weight="700">3</text>
+                            <text x="70" y="609" fill="#e5e5e5" font-size="9" font-weight="600">AXON-native output</text>
+                            <text x="70" y="622" fill="#888" font-size="8">Model responds in AXON notation. Fewer output tokens generated, decoded client-side at zero cost.</text>
+
+                            <!-- Gain 4 -->
+                            <circle cx="56" cy="644" r="5" fill="#4ade80" fill-opacity="0.2" stroke="#4ade80" stroke-width="1"/>
+                            <text x="56" y="648" text-anchor="middle" fill="#4ade80" font-size="8" font-weight="700">4</text>
+                            <text x="70" y="641" fill="#e5e5e5" font-size="9" font-weight="600">Faster time-to-first-token</text>
+                            <text x="70" y="654" fill="#888" font-size="8">Prefill phase processes 68 tokens instead of 568. 8x faster TTFT on input-bound workloads.</text>
+
+                            <!-- Summary bar -->
+                            <rect x="36" y="680" width="808" height="30" rx="15" fill="#4ade80" fill-opacity="0.08" stroke="#4ade80" stroke-width="1"/>
+                            <text x="440" y="700" text-anchor="middle" fill="#4ade80" font-size="11" font-weight="700">Fine-tuned: ~88% fewer input tokens, ~50% fewer output tokens, ~70x less attention compute</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Today vs vNext comparison -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Today vs Fine-Tuned</h2>
+                    <div class="overflow-x-auto rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-900 dark:bg-gray-900 bg-gray-100">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Metric</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Baseline</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-axon-accent/70 uppercase">Today (AXON)</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-green-400/70 uppercase">vNext (Fine-Tuned)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-800 dark:divide-gray-800 divide-gray-200">
+                                <tr>
+                                    <td class="px-4 py-2 text-gray-400">System prompt</td>
+                                    <td class="px-4 py-2 text-right font-mono text-gray-500">0 tok</td>
+                                    <td class="px-4 py-2 text-right font-mono text-amber-400">~500 tok</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-positive font-semibold">0 tok</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 text-gray-400">Prompt tokens</td>
+                                    <td class="px-4 py-2 text-right font-mono text-gray-500">105</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-output">68</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-positive font-semibold">68</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 text-gray-400">Total input to model</td>
+                                    <td class="px-4 py-2 text-right font-mono text-gray-500">105</td>
+                                    <td class="px-4 py-2 text-right font-mono text-amber-400">~568</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-positive font-semibold">68</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 text-gray-400">Attention compute</td>
+                                    <td class="px-4 py-2 text-right font-mono text-gray-500">O(105&sup2;)</td>
+                                    <td class="px-4 py-2 text-right font-mono text-amber-400">O(568&sup2;)</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-positive font-semibold">O(68&sup2;)</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 text-gray-400">Response format</td>
+                                    <td class="px-4 py-2 text-right text-gray-500">Natural language</td>
+                                    <td class="px-4 py-2 text-right text-gray-500">Natural language</td>
+                                    <td class="px-4 py-2 text-right text-axon-positive font-semibold">AXON notation</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 text-gray-400">Output tokens (est.)</td>
+                                    <td class="px-4 py-2 text-right font-mono text-gray-500">2,038</td>
+                                    <td class="px-4 py-2 text-right font-mono text-gray-500">2,038</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-positive font-semibold">~1,000</td>
+                                </tr>
+                                <tr class="bg-axon-accent/5">
+                                    <td class="px-4 py-2 font-semibold text-white dark:text-white text-gray-900">Prefill speedup</td>
+                                    <td class="px-4 py-2 text-right font-mono text-gray-500">1x</td>
+                                    <td class="px-4 py-2 text-right font-mono text-amber-400">0.2x (slower)</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-positive font-bold">1.5x faster</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-xs text-gray-600 mt-2">Estimates based on current AXON v1.1 L0 compression ratios. Actual fine-tuned model performance will depend on training data quality and model architecture.</p>
+                </div>
+
+                <!-- The paradox callout -->
+                <div class="mb-10 rounded-xl border border-amber-500/30 bg-amber-500/5 p-5">
+                    <div class="flex items-start gap-3">
+                        <div class="text-amber-400 text-xl mt-0.5">!</div>
+                        <div>
+                            <p class="text-sm text-gray-300 dark:text-gray-300 text-gray-700 leading-relaxed"><strong class="text-white dark:text-white text-gray-900">The system prompt paradox.</strong> Today, AXON saves 35% on prompt tokens but <em>adds</em> ~500 tokens of system prompt to teach the model the notation. This means AXON only breaks even on prompts longer than ~770 tokens. A fine-tuned model eliminates this overhead entirely — every prompt is net positive, no matter how short.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Roadmap -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Roadmap</h2>
+                    <div class="space-y-4">
+                        <div class="rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200 p-4">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="px-2 py-0.5 rounded-full bg-axon-positive/15 text-axon-positive text-xs font-semibold">Shipped</span>
+                                <h3 class="font-semibold text-white dark:text-white text-gray-900">v1.1 — Tiered Abbreviations</h3>
+                            </div>
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600">Four abbreviation levels (L0-L3), stop-word stripping in code queries, response compression directive. 35% prompt savings on general technical questions, 71% on code commands.</p>
+                        </div>
+                        <div class="rounded-lg border border-axon-accent/30 dark:border-axon-accent/30 border-axon-accent/30 p-4">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="px-2 py-0.5 rounded-full bg-axon-accent/15 text-axon-accent text-xs font-semibold">Next</span>
+                                <h3 class="font-semibold text-white dark:text-white text-gray-900">v1.2 — Bidirectional WASM Codec</h3>
+                            </div>
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600">Full encode/decode round-trip in the WASM engine. Client-side decoding of AXON responses at zero API cost. Enables the fine-tuned model to respond in AXON notation with lossless reconstruction.</p>
+                        </div>
+                        <div class="rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200 p-4">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="px-2 py-0.5 rounded-full bg-gray-700/50 text-gray-400 text-xs font-semibold">Planned</span>
+                                <h3 class="font-semibold text-white dark:text-white text-gray-900">v2.0 — Fine-Tuned AXON Model</h3>
+                            </div>
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600">A language model fine-tuned to natively understand and produce AXON notation. No system prompt needed. Both input and output compressed. Target: 88% fewer input tokens, 50% fewer output tokens, 70x less attention compute per request.</p>
+                        </div>
+                        <div class="rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200 p-4">
+                            <div class="flex items-center gap-3 mb-2">
+                                <span class="px-2 py-0.5 rounded-full bg-gray-700/50 text-gray-400 text-xs font-semibold">Planned</span>
+                                <h3 class="font-semibold text-white dark:text-white text-gray-900">Custom AXON Tokenizer</h3>
+                            </div>
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600">A BPE tokenizer trained on AXON notation, where sigils, operators, and abbreviated terms are single tokens instead of multi-token sequences. Further reduces token count at the tokenizer level.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- The full stack vision -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">The Full Stack</h2>
+                    <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 mb-4">Every layer of the inference stack has compression opportunities. Today AXON addresses one layer. The vision is all of them.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        <div class="text-center p-4 rounded-xl border border-axon-accent dark:border-axon-accent border-axon-accent bg-axon-accent/5">
+                            <div class="text-xs text-axon-accent font-semibold mb-2">PROMPT</div>
+                            <div class="text-lg font-bold text-white dark:text-white text-gray-900">AXON</div>
+                            <div class="text-xs text-gray-500 mt-1">Rule-based NLP</div>
+                            <div class="text-xs text-axon-positive mt-1 font-mono">shipped</div>
+                        </div>
+                        <div class="text-center p-4 rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200">
+                            <div class="text-xs text-gray-500 font-semibold mb-2">TOKENIZER</div>
+                            <div class="text-lg font-bold text-white dark:text-white text-gray-900">AXON BPE</div>
+                            <div class="text-xs text-gray-500 mt-1">Custom vocabulary</div>
+                            <div class="text-xs text-gray-600 mt-1 font-mono">planned</div>
+                        </div>
+                        <div class="text-center p-4 rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200">
+                            <div class="text-xs text-gray-500 font-semibold mb-2">MODEL</div>
+                            <div class="text-lg font-bold text-white dark:text-white text-gray-900">Fine-Tune</div>
+                            <div class="text-xs text-gray-500 mt-1">Native AXON I/O</div>
+                            <div class="text-xs text-gray-600 mt-1 font-mono">planned</div>
+                        </div>
+                        <div class="text-center p-4 rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200">
+                            <div class="text-xs text-gray-500 font-semibold mb-2">RESPONSE</div>
+                            <div class="text-lg font-bold text-white dark:text-white text-gray-900">Decoder</div>
+                            <div class="text-xs text-gray-500 mt-1">Client-side WASM</div>
+                            <div class="text-xs text-gray-600 mt-1 font-mono">next</div>
+                        </div>
                     </div>
                 </div>
             </section>
