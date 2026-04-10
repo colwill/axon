@@ -1,5 +1,7 @@
 # AXON — AI eXchange Optimised Notation
 
+[AXON Playground and docs](https://colwill.github.io/axon/playground)
+
 A pure Rust rule-based NLP engine that translates natural language into AXON notation, compiled to WebAssembly, runs entirely in the browser. Handles both general knowledge and programming tasks in one unified notation.
 
 **Full specification:** [AXON_SPEC.md](AXON_SPEC.md)

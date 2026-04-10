@@ -287,7 +287,7 @@
 
                             <!-- Fine-tuned model -->
                             <rect x="354" y="400" width="132" height="64" rx="10" fill="#4ade80" fill-opacity="0.08" stroke="#4ade80" stroke-width="1.5"/>
-                            <text x="420" y="420" text-anchor="middle" fill="#4ade80" font-size="11" font-weight="700">Fine-Tuned LLM</text>
+                            <text x="420" y="420" text-anchor="middle" fill="#4ade80" font-size="11" font-weight="700">qwen2.5:7b-axon</text>
                             <text x="420" y="436" text-anchor="middle" fill="#4ade80" font-size="8" opacity="0.8">AXON is native</text>
                             <text x="420" y="449" text-anchor="middle" fill="#4ade80" font-size="8" opacity="0.6">no prompt overhead</text>
 
@@ -348,6 +348,257 @@
                             <rect x="36" y="680" width="808" height="30" rx="15" fill="#4ade80" fill-opacity="0.08" stroke="#4ade80" stroke-width="1"/>
                             <text x="440" y="700" text-anchor="middle" fill="#4ade80" font-size="11" font-weight="700">Fine-tuned: ~88% fewer input tokens, ~50% fewer output tokens, ~70x less attention compute</text>
                         </svg>
+                    </div>
+                </div>
+
+                <!-- Full Stack Diagram: AXON + Qwen2.5-7B-AXON + Caveman -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Full Stack: AXON + Qwen2.5-7B-AXON + Caveman</h2>
+                    <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 mb-4">Three complementary approaches — each targeting a different stage of the inference pipeline. AXON compresses input, a fine-tuned 7B model understands it natively, and Caveman compresses output. Combined, they minimize tokens at every stage.</p>
+                    <div class="rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200 bg-axon-surface dark:bg-axon-surface bg-gray-50 p-4 overflow-x-auto">
+                        <svg viewBox="0 0 880 700" class="w-full" style="min-width:720px" xmlns="http://www.w3.org/2000/svg" font-family="'JetBrains Mono',monospace">
+                            <defs>
+                                <marker id="q-arr" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-auto"><path d="M0,0 L10,3.5 L0,7z" fill="#555"/></marker>
+                                <marker id="q-arr-p" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-auto"><path d="M0,0 L10,3.5 L0,7z" fill="#7c5cfc"/></marker>
+                                <marker id="q-arr-g" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-auto"><path d="M0,0 L10,3.5 L0,7z" fill="#4ade80"/></marker>
+                                <marker id="q-arr-a" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-auto"><path d="M0,0 L10,3.5 L0,7z" fill="#f59e0b"/></marker>
+                                <marker id="q-arr-c" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-auto"><path d="M0,0 L10,3.5 L0,7z" fill="#38bdf8"/></marker>
+                                <linearGradient id="q-zone-axon" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7c5cfc" stop-opacity="0.12"/><stop offset="100%" stop-color="#7c5cfc" stop-opacity="0.02"/></linearGradient>
+                                <linearGradient id="q-zone-model" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#38bdf8" stop-opacity="0.12"/><stop offset="100%" stop-color="#38bdf8" stop-opacity="0.02"/></linearGradient>
+                                <linearGradient id="q-zone-cave" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f59e0b" stop-opacity="0.12"/><stop offset="100%" stop-color="#f59e0b" stop-opacity="0.02"/></linearGradient>
+                            </defs>
+
+                            <!-- Title -->
+                            <text x="440" y="22" text-anchor="middle" fill="#e5e5e5" font-size="12" font-weight="700">Combined Inference Pipeline — Maximum Efficiency</text>
+
+                            <!-- ── THREE ZONE BACKGROUNDS ── -->
+                            <rect x="16" y="42" width="240" height="380" rx="12" fill="url(#q-zone-axon)" stroke="#7c5cfc" stroke-width="1" stroke-opacity="0.25" stroke-dasharray="4,4"/>
+                            <text x="136" y="64" text-anchor="middle" fill="#7c5cfc" font-size="10" font-weight="600" letter-spacing="0.1em">AXON</text>
+                            <text x="136" y="78" text-anchor="middle" fill="#7c5cfc" font-size="8" opacity="0.6">input compression</text>
+
+                            <rect x="272" y="42" width="290" height="380" rx="12" fill="url(#q-zone-model)" stroke="#38bdf8" stroke-width="1" stroke-opacity="0.25" stroke-dasharray="4,4"/>
+                            <text x="417" y="64" text-anchor="middle" fill="#38bdf8" font-size="10" font-weight="600" letter-spacing="0.1em">QWEN2.5-7B-AXON</text>
+                            <text x="417" y="78" text-anchor="middle" fill="#38bdf8" font-size="8" opacity="0.6">fine-tuned instruct model</text>
+
+                            <rect x="578" y="42" width="286" height="380" rx="12" fill="url(#q-zone-cave)" stroke="#f59e0b" stroke-width="1" stroke-opacity="0.25" stroke-dasharray="4,4"/>
+                            <text x="721" y="64" text-anchor="middle" fill="#f59e0b" font-size="10" font-weight="600" letter-spacing="0.1em">CAVEMAN</text>
+                            <text x="721" y="78" text-anchor="middle" fill="#f59e0b" font-size="8" opacity="0.6">output compression</text>
+
+                            <!-- ══════════ ROW 1: INPUT ══════════ -->
+                            <rect x="46" y="100" width="180" height="50" rx="8" fill="#1e1e1e" stroke="#333" stroke-width="1"/>
+                            <text x="136" y="121" text-anchor="middle" fill="#e5e5e5" font-size="10" font-weight="600">User Prompt</text>
+                            <text x="136" y="137" text-anchor="middle" fill="#888" font-size="8">natural language text</text>
+                            <rect x="108" y="155" width="56" height="17" rx="8" fill="#1e1e1e" stroke="#555" stroke-width="0.5"/>
+                            <text x="136" y="167" text-anchor="middle" fill="#999" font-size="8">105 tok</text>
+
+                            <!-- Arrow down -->
+                            <line x1="136" y1="172" x2="136" y2="198" stroke="#555" stroke-width="1.5" marker-end="url(#q-arr)"/>
+
+                            <!-- ══════════ ROW 2: AXON TRANSLATOR ══════════ -->
+                            <rect x="46" y="202" width="180" height="56" rx="8" fill="#7c5cfc" fill-opacity="0.12" stroke="#7c5cfc" stroke-width="1.5"/>
+                            <text x="136" y="223" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="700">AXON v1.1 Translator</text>
+                            <text x="136" y="239" text-anchor="middle" fill="#7c5cfc" font-size="8" opacity="0.8">sigils + L0 abbrev + stop-word strip</text>
+                            <text x="136" y="251" text-anchor="middle" fill="#7c5cfc" font-size="7" opacity="0.6">runs client-side via WASM</text>
+
+                            <!-- Savings badge -->
+                            <rect x="97" y="263" width="78" height="17" rx="8" fill="#4ade80" fill-opacity="0.12" stroke="#4ade80" stroke-width="0.5"/>
+                            <text x="136" y="275" text-anchor="middle" fill="#4ade80" font-size="8" font-weight="600">-35% input tok</text>
+
+                            <!-- Token count -->
+                            <rect x="108" y="285" width="56" height="17" rx="8" fill="#1e1e1e" stroke="#7c5cfc" stroke-width="0.5"/>
+                            <text x="136" y="297" text-anchor="middle" fill="#a78bfa" font-size="8">68 tok</text>
+
+                            <!-- ══════════ ROW 3: INTO MODEL ══════════ -->
+                            <!-- Arrow to model -->
+                            <line x1="136" y1="302" x2="136" y2="320" stroke="#7c5cfc" stroke-width="1.5"/>
+                            <line x1="136" y1="320" x2="330" y2="320" stroke="#7c5cfc" stroke-width="1.5" marker-end="url(#q-arr-p)"/>
+
+                            <!-- No system prompt -->
+                            <rect x="290" y="296" width="80" height="16" rx="4" fill="none" stroke="#555" stroke-width="0.5" stroke-dasharray="2,2" opacity="0.4"/>
+                            <text x="330" y="308" text-anchor="middle" fill="#666" font-size="7" text-decoration="line-through">sys prompt</text>
+                            <text x="376" y="308" fill="#4ade80" font-size="8" font-weight="700">0 tok</text>
+
+                            <!-- Token badge on arrow -->
+                            <rect x="172" y="326" width="60" height="17" rx="8" fill="#1e1e1e" stroke="#7c5cfc" stroke-width="0.5"/>
+                            <text x="202" y="338" text-anchor="middle" fill="#a78bfa" font-size="8">68 tok in</text>
+
+                            <!-- ── Qwen2.5:7B-Instruct-AXON ── -->
+                            <rect x="292" y="340" width="250" height="72" rx="10" fill="#38bdf8" fill-opacity="0.08" stroke="#38bdf8" stroke-width="1.5"/>
+                            <text x="417" y="360" text-anchor="middle" fill="#38bdf8" font-size="12" font-weight="700">qwen2.5:7b-instruct</text>
+                            <text x="417" y="376" text-anchor="middle" fill="#38bdf8" font-size="9" opacity="0.8">fine-tuned on AXON notation</text>
+
+                            <!-- Model internals -->
+                            <rect x="302" y="386" width="72" height="20" rx="4" fill="#1e1e1e" stroke="#38bdf8" stroke-width="0.5"/>
+                            <text x="338" y="400" text-anchor="middle" fill="#7dd3fc" font-size="7" font-weight="600">Embeddings</text>
+                            <rect x="382" y="386" width="72" height="20" rx="4" fill="#1e1e1e" stroke="#38bdf8" stroke-width="0.5"/>
+                            <text x="418" y="400" text-anchor="middle" fill="#7dd3fc" font-size="7" font-weight="600">Transformer</text>
+                            <rect x="462" y="386" width="40" height="20" rx="4" fill="#4ade80" fill-opacity="0.1" stroke="#4ade80" stroke-width="0.5"/>
+                            <text x="482" y="397" text-anchor="middle" fill="#4ade80" font-size="6" font-weight="700">AXON</text>
+                            <rect x="506" y="386" width="28" height="20" rx="4" fill="#1e1e1e" stroke="#38bdf8" stroke-width="0.5"/>
+                            <text x="520" y="400" text-anchor="middle" fill="#7dd3fc" font-size="6" font-weight="600">7B</text>
+
+                            <!-- Arrow out of model -->
+                            <line x1="542" y1="376" x2="598" y2="376" stroke="#38bdf8" stroke-width="1.5" marker-end="url(#q-arr-c)"/>
+
+                            <!-- ══════════ ROW 4: CAVEMAN OUTPUT ══════════ -->
+                            <rect x="602" y="344" width="130" height="64" rx="8" fill="#f59e0b" fill-opacity="0.1" stroke="#f59e0b" stroke-width="1.5"/>
+                            <text x="667" y="364" text-anchor="middle" fill="#fbbf24" font-size="10" font-weight="700">Caveman Output</text>
+                            <text x="667" y="378" text-anchor="middle" fill="#fbbf24" font-size="8">terse AXON response</text>
+                            <text x="667" y="392" text-anchor="middle" fill="#f59e0b" font-size="7" opacity="0.7">baked in + prompted</text>
+
+                            <!-- Savings -->
+                            <rect x="607" y="413" width="120" height="17" rx="8" fill="#4ade80" fill-opacity="0.12" stroke="#4ade80" stroke-width="0.5"/>
+                            <text x="667" y="425" text-anchor="middle" fill="#4ade80" font-size="8" font-weight="600">-70% output tokens</text>
+
+                            <!-- Arrow down to decoder -->
+                            <line x1="667" y1="430" x2="667" y2="452" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#q-arr-a)"/>
+
+                            <!-- Token count -->
+                            <rect x="740" y="367" width="68" height="17" rx="8" fill="#1e1e1e" stroke="#f59e0b" stroke-width="0.5"/>
+                            <text x="774" y="379" text-anchor="middle" fill="#fbbf24" font-size="8">~610 tok</text>
+
+                            <!-- ══════════ ROW 5: CLIENT DECODE ══════════ -->
+                            <rect x="602" y="456" width="130" height="44" rx="8" fill="#7c5cfc" fill-opacity="0.08" stroke="#7c5cfc" stroke-width="1"/>
+                            <text x="667" y="476" text-anchor="middle" fill="#a78bfa" font-size="9" font-weight="600">AXON Decoder</text>
+                            <text x="667" y="490" text-anchor="middle" fill="#888" font-size="7">client-side WASM, 0 cost</text>
+
+                            <line x1="667" y1="500" x2="667" y2="518" stroke="#555" stroke-width="1.5" marker-end="url(#q-arr)"/>
+
+                            <rect x="602" y="522" width="130" height="44" rx="8" fill="#1e1e1e" stroke="#4ade80" stroke-width="1"/>
+                            <text x="667" y="542" text-anchor="middle" fill="#e5e5e5" font-size="10" font-weight="600">Final Response</text>
+                            <text x="667" y="556" text-anchor="middle" fill="#4ade80" font-size="8">natural language</text>
+
+                            <!-- ══════════ GAINS PANEL ══════════ -->
+                            <rect x="16" y="440" width="548" height="250" rx="10" fill="#1e1e1e" stroke="#4ade80" stroke-width="1" stroke-opacity="0.3"/>
+                            <text x="36" y="464" fill="#4ade80" font-size="11" font-weight="700">Combined Efficiency Gains</text>
+
+                            <!-- AXON -->
+                            <rect x="32" y="480" width="8" height="8" rx="2" fill="#7c5cfc"/>
+                            <text x="48" y="488" fill="#a78bfa" font-size="9" font-weight="700">AXON — Input Side</text>
+                            <text x="48" y="502" fill="#888" font-size="8">Prompt compression: 105 &rarr; 68 tokens (-35%). Runs client-side, zero latency added.</text>
+                            <text x="48" y="514" fill="#888" font-size="8">No system prompt needed with fine-tuned model: saves ~500 tok per request.</text>
+
+                            <!-- Qwen -->
+                            <rect x="32" y="530" width="8" height="8" rx="2" fill="#38bdf8"/>
+                            <text x="48" y="538" fill="#7dd3fc" font-size="9" font-weight="700">qwen2.5:7b-instruct — Model Side</text>
+                            <text x="48" y="552" fill="#888" font-size="8">7B params: fast inference, deployable on a single GPU or CPU via Ollama/vLLM.</text>
+                            <text x="48" y="564" fill="#888" font-size="8">Native AXON I/O: no notation interpretation overhead. Prefill: O(68&sup2;) vs O(605&sup2;) = ~79x less compute.</text>
+                            <text x="48" y="576" fill="#888" font-size="8">Generates AXON notation: denser information per token, fewer tokens to generate.</text>
+
+                            <!-- Caveman -->
+                            <rect x="32" y="592" width="8" height="8" rx="2" fill="#f59e0b"/>
+                            <text x="48" y="600" fill="#fbbf24" font-size="9" font-weight="700">Caveman — Output Side</text>
+                            <text x="48" y="614" fill="#888" font-size="8">Terse response style baked into fine-tune + reinforced by prompt. Stacks with AXON notation.</text>
+                            <text x="48" y="626" fill="#888" font-size="8">AXON density + Caveman brevity = ~70% fewer output tokens. Client-side decode at zero cost.</text>
+
+                            <!-- Summary -->
+                            <rect x="32" y="644" width="518" height="34" rx="17" fill="#4ade80" fill-opacity="0.08" stroke="#4ade80" stroke-width="1"/>
+                            <text x="291" y="658" text-anchor="middle" fill="#4ade80" font-size="9" font-weight="700">Full stack: 68 tok in, 0 sys prompt, ~610 tok out, 7B model, single GPU</text>
+                            <text x="291" y="672" text-anchor="middle" fill="#4ade80" font-size="9" font-weight="700">vs baseline: -35% input, -70% output, ~79x less prefill compute</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Three-way comparison table -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Three-Way Comparison</h2>
+                    <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 mb-4">How each approach stacks across the inference pipeline. Columns are cumulative — each adds to the previous.</p>
+                    <div class="overflow-x-auto rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-900 dark:bg-gray-900 bg-gray-100">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Stage</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Baseline</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-axon-accent/70 uppercase">+ AXON</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium" style="color:rgba(56,189,248,0.7)">+ Qwen-7B-AXON</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-amber-400/70 uppercase">+ Caveman</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-800 dark:divide-gray-800 divide-gray-200">
+                                <tr>
+                                    <td class="px-4 py-2 text-gray-400">Prompt tokens</td>
+                                    <td class="px-4 py-2 text-right font-mono text-gray-500">105 tok</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-output font-semibold">68 tok</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-output">68 tok</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-output">68 tok</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 text-gray-400">System prompt</td>
+                                    <td class="px-4 py-2 text-right font-mono text-gray-500">0</td>
+                                    <td class="px-4 py-2 text-right font-mono text-amber-400">~500 tok</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-positive font-semibold">0</td>
+                                    <td class="px-4 py-2 text-right font-mono text-gray-500">~20 tok</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 text-gray-400">Total input to model</td>
+                                    <td class="px-4 py-2 text-right font-mono text-gray-500">105</td>
+                                    <td class="px-4 py-2 text-right font-mono text-amber-400">~568</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-positive font-semibold">68</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-positive">88</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 text-gray-400">Prefill attention</td>
+                                    <td class="px-4 py-2 text-right font-mono text-gray-500">O(105&sup2;)</td>
+                                    <td class="px-4 py-2 text-right font-mono text-amber-400">O(568&sup2;)</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-positive font-semibold">O(68&sup2;)</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-positive">O(88&sup2;)</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 text-gray-400">Model size</td>
+                                    <td class="px-4 py-2 text-right text-gray-500">API (large)</td>
+                                    <td class="px-4 py-2 text-right text-gray-500">API (large)</td>
+                                    <td class="px-4 py-2 text-right font-semibold" style="color:#7dd3fc">7B (local)</td>
+                                    <td class="px-4 py-2 text-right font-semibold" style="color:#7dd3fc">7B (local)</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 text-gray-400">Output format</td>
+                                    <td class="px-4 py-2 text-right text-gray-500">Natural lang</td>
+                                    <td class="px-4 py-2 text-right text-gray-500">Natural lang</td>
+                                    <td class="px-4 py-2 text-right font-semibold" style="color:#7dd3fc">AXON notation</td>
+                                    <td class="px-4 py-2 text-right text-amber-400 font-semibold">Terse AXON</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 text-gray-400">Output tokens (est.)</td>
+                                    <td class="px-4 py-2 text-right font-mono text-gray-500">~2,038</td>
+                                    <td class="px-4 py-2 text-right font-mono text-gray-500">~2,038</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-positive font-semibold">~1,000</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-positive font-bold">~610</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 text-gray-400">Client decode</td>
+                                    <td class="px-4 py-2 text-right text-gray-500">None</td>
+                                    <td class="px-4 py-2 text-right text-gray-500">None</td>
+                                    <td class="px-4 py-2 text-right text-axon-output">WASM decoder</td>
+                                    <td class="px-4 py-2 text-right text-axon-output">WASM decoder</td>
+                                </tr>
+                                <tr class="bg-axon-accent/5">
+                                    <td class="px-4 py-2 font-semibold text-white dark:text-white text-gray-900">Total tokens</td>
+                                    <td class="px-4 py-2 text-right font-mono text-gray-500">~2,143</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-output">~2,606</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-positive font-semibold">~1,068</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-positive font-bold">~698</td>
+                                </tr>
+                                <tr class="bg-axon-accent/5">
+                                    <td class="px-4 py-2 font-semibold text-white dark:text-white text-gray-900">vs Baseline</td>
+                                    <td class="px-4 py-2 text-right text-gray-500">&mdash;</td>
+                                    <td class="px-4 py-2 text-right font-mono text-red-400">+21.6%</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-positive font-semibold">-50.2%</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-positive font-bold">-67.4%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-xs text-gray-600 mt-2">+ columns are cumulative. "+ Qwen-7B-AXON" replaces the API model with a local 7B fine-tune that natively speaks AXON. "+ Caveman" adds terse output shaping. Text-only pipeline — no image tokens.</p>
+                </div>
+
+                <!-- Why qwen2.5:7b-instruct callout -->
+                <div class="mb-10 rounded-xl border border-sky-500/30 bg-sky-500/5 p-5">
+                    <div class="flex items-start gap-3">
+                        <div class="text-sky-400 text-xl mt-0.5">?</div>
+                        <div>
+                            <p class="text-sm text-gray-300 dark:text-gray-300 text-gray-700 leading-relaxed mb-2"><strong class="text-white dark:text-white text-gray-900">Why qwen2.5:7b-instruct?</strong> It's an open-weight 7B instruction-tuned model — small enough to run locally on a single GPU (or even CPU via Ollama/llama.cpp), yet capable enough for code assistance, technical Q&A, and structured output. Fine-tuning it on AXON notation (qwen2.5-7b-axon) would produce a model that natively understands and generates AXON without a system prompt.</p>
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 leading-relaxed">The key advantage over API models: zero per-token cost, full control over the model, and the system prompt overhead disappears entirely. Combined with Caveman-style terse output baked into the fine-tune, every token in and out carries maximum information density.</p>
+                        </div>
                     </div>
                 </div>
 
@@ -444,9 +695,9 @@
                         <div class="rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200 p-4">
                             <div class="flex items-center gap-3 mb-2">
                                 <span class="px-2 py-0.5 rounded-full bg-gray-700/50 text-gray-400 text-xs font-semibold">Planned</span>
-                                <h3 class="font-semibold text-white dark:text-white text-gray-900">v2.0 — Fine-Tuned AXON Model</h3>
+                                <h3 class="font-semibold text-white dark:text-white text-gray-900">v2.0 — qwen2.5-7b-axon</h3>
                             </div>
-                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600">A language model fine-tuned to natively understand and produce AXON notation. No system prompt needed. Both input and output compressed. Target: 88% fewer input tokens, 50% fewer output tokens, 70x less attention compute per request.</p>
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600">qwen2.5:7b-instruct fine-tuned to natively understand and produce AXON notation. No system prompt needed. Runs locally on a single GPU. Both input and output compressed. Target: 88% fewer input tokens, 50% fewer output tokens, 79x less attention compute per request.</p>
                         </div>
                         <div class="rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200 p-4">
                             <div class="flex items-center gap-3 mb-2">
