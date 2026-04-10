@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AXON Playground — AI eXchange Optimized Notation</title>
+    <meta name="description" content="Interactive playground for AXON v1.1 notation. Translate natural language to compact, token-efficient expressions.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+    tailwind.config = {
+        darkMode: 'class',
+        theme: {
+            extend: {
+                colors: {
+                    axon: { bg: '#0a0a0a', surface: '#141414', border: '#1e1e1e', accent: '#7c5cfc', output: '#a78bfa', positive: '#4ade80' }
+                },
+                fontFamily: {
+                    sans: ['Inter', 'system-ui', 'sans-serif'],
+                    mono: ['"JetBrains Mono"', 'Fira Code', 'monospace'],
+                },
+            },
+        },
+    }
+    </script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+
+    <style>
+        body { background: #0a0a0a; }
+        .light body { background: #ffffff; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        .light ::-webkit-scrollbar-thumb { background: #ccc; }
+        .nav-item { transition: all 0.15s ease; }
+        .nav-item:hover { background: rgba(124, 92, 252, 0.08); }
+        .nav-item.active { border-left: 2px solid #7c5cfc; color: #a78bfa; background: rgba(124, 92, 252, 0.06); }
+        .fade-in { animation: fadeIn 0.2s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        .toast { animation: toastIn 0.3s ease, toastOut 0.3s ease 1.7s forwards; }
+        @keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes toastOut { to { opacity: 0; transform: translateY(-10px); } }
+        .sigil-badge { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 15px; }
+    </style>
+</head>
+
+<body class="font-sans text-gray-300 dark:text-gray-300 text-gray-700 min-h-screen" x-data="app()">
+
+    <!-- Header -->
+    <header class="fixed top-0 left-0 right-0 z-50 h-14 border-b border-gray-800 dark:border-gray-800 border-gray-200 bg-axon-bg/95 dark:bg-axon-bg/95 bg-white/95 backdrop-blur-sm flex items-center px-4 lg:px-6">
+        <button class="lg:hidden mr-3 p-1.5 rounded-md hover:bg-gray-800" @click="sidebarOpen = !sidebarOpen">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div class="flex items-center gap-2">
+            <span class="font-mono font-bold text-lg text-white dark:text-white text-gray-900">AX<span class="text-axon-accent">ON</span></span>
+            <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-axon-accent/15 text-axon-accent">v1.1</span>
+        </div>
+        <div class="flex-1"></div>
+        <div class="flex items-center gap-2">
+            <a href="https://marketplace.visualstudio.com/items?itemName=colwill.axon-notation" target="_blank" class="p-2 rounded-md hover:bg-gray-800 dark:hover:bg-gray-800 hover:bg-gray-100 text-gray-400 hover:text-gray-200" title="VS Code Extension">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M17.583 2.603L9.88 9.71.72 3.395a.9.9 0 0 0-1.057.07.9.9 0 0 0-.283.715v15.64a.9.9 0 0 0 .283.715.9.9 0 0 0 1.057.07l9.16-6.316 7.703 7.108A1.5 1.5 0 0 0 19.5 20.4V3.6a1.5 1.5 0 0 0-1.917-.997z"/></svg>
+            </a>
+            <a href="https://github.com/colwill/axon" target="_blank" class="p-2 rounded-md hover:bg-gray-800 dark:hover:bg-gray-800 hover:bg-gray-100 text-gray-400 hover:text-gray-200" title="GitHub">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+            </a>
+            <button @click="toggleTheme()" class="p-2 rounded-md hover:bg-gray-800 dark:hover:bg-gray-800 hover:bg-gray-100 text-gray-400 hover:text-gray-200" title="Toggle theme">
+                <svg x-show="dark" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path stroke-linecap="round" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                <svg x-show="!dark" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <div class="flex pt-14">
+        <!-- Sidebar -->
+        <aside class="fixed lg:sticky top-14 left-0 h-[calc(100vh-3.5rem)] w-64 border-r border-gray-800 dark:border-gray-800 border-gray-200 bg-axon-bg dark:bg-axon-bg bg-white overflow-y-auto z-40 transition-transform lg:translate-x-0"
+               :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
+            <nav class="py-4 px-3 text-sm">
+                <div class="mb-6">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 mb-2">Getting Started</p>
+                    <button @click="go('playground')" class="nav-item block w-full text-left px-3 py-1.5 rounded-md" :class="section === 'playground' && 'active'">Playground</button>
+                </div>
+                <div class="mb-6">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 mb-2">Reference</p>
+                    <button @click="go('spec')" class="nav-item block w-full text-left px-3 py-1.5 rounded-md" :class="section === 'spec' && 'active'">Specification</button>
+                    <button @click="go('examples')" class="nav-item block w-full text-left px-3 py-1.5 rounded-md" :class="section === 'examples' && 'active'">Examples</button>
+                </div>
+                <div class="mb-6">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 mb-2">Integration</p>
+                    <button @click="go('prompt')" class="nav-item block w-full text-left px-3 py-1.5 rounded-md" :class="section === 'prompt' && 'active'">LLM Prompt</button>
+                    <button @click="go('caveman')" class="nav-item block w-full text-left px-3 py-1.5 rounded-md" :class="section === 'caveman' && 'active'">+Caveman</button>
+                </div>
+                <div class="mb-6">
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 mb-2">Tools</p>
+                    <button @click="go('vscode')" class="nav-item block w-full text-left px-3 py-1.5 rounded-md" :class="section === 'vscode' && 'active'">VS Code Extension</button>
+                    <button @click="go('claudecode')" class="nav-item block w-full text-left px-3 py-1.5 rounded-md" :class="section === 'claudecode' && 'active'">Claude Code Skill</button>
+                    <button @click="go('repl')" class="nav-item block w-full text-left px-3 py-1.5 rounded-md" :class="section === 'repl' && 'active'">REPL</button>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Sidebar overlay on mobile -->
+        <div class="fixed inset-0 bg-black/50 z-30 lg:hidden" x-show="sidebarOpen" @click="sidebarOpen = false" x-transition.opacity></div>
+
+        <!-- Main Content -->
+        <main class="flex-1 min-h-[calc(100vh-3.5rem)] px-6 lg:px-12 py-10 max-w-4xl mx-auto">
+
+            <!-- ═══ PLAYGROUND ═══ -->
+            <section x-show="section === 'playground'" x-transition class="fade-in">
+                <h1 class="text-3xl font-bold text-white dark:text-white text-gray-900 mb-2">AXON Playground</h1>
+                <p class="text-gray-400 dark:text-gray-400 text-gray-600 mb-8 text-lg">Translate natural language into compact, token-efficient notation. Runs entirely in your browser via WebAssembly.</p>
+
+                <!-- Translator -->
+                <div class="rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200 bg-axon-surface dark:bg-axon-surface bg-gray-50 overflow-hidden mb-6">
+                    <div class="p-4">
+                        <label class="block text-xs font-medium text-gray-500 mb-2 uppercase tracking-wider">Input</label>
+                        <textarea x-model="input" @keydown.ctrl.enter="translate()" @keydown.meta.enter="translate()"
+                            class="w-full bg-transparent border-0 outline-none resize-none text-white dark:text-white text-gray-900 text-sm font-mono placeholder-gray-600"
+                            rows="3" placeholder="Type natural language or a programming query..." :disabled="loading"></textarea>
+                    </div>
+                    <div class="flex items-center justify-between px-4 py-3 border-t border-gray-800 dark:border-gray-800 border-gray-200">
+                        <span class="text-xs text-gray-600" x-text="loading ? 'Loading WASM engine...' : 'Ctrl+Enter to translate'"></span>
+                        <button @click="translate()" :disabled="loading || !input.trim()"
+                            class="px-4 py-1.5 text-sm font-medium rounded-lg bg-axon-accent text-white hover:bg-axon-accent/90 disabled:opacity-40 disabled:cursor-not-allowed transition">
+                            Translate
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Output -->
+                <div x-show="output" x-transition class="rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200 bg-axon-surface dark:bg-axon-surface bg-gray-50 overflow-hidden mb-8 fade-in">
+                    <div class="flex items-center justify-between px-4 py-3 border-b border-gray-800 dark:border-gray-800 border-gray-200">
+                        <span class="text-xs font-medium text-gray-500 uppercase tracking-wider">AXON Output</span>
+                        <span x-show="output && output.savings > 0" class="text-xs font-mono font-semibold px-2 py-0.5 rounded-full bg-axon-positive/15 text-axon-positive" x-text="output ? `\u2212${output.savings}% tokens` : ''"></span>
+                    </div>
+                    <div class="p-4">
+                        <div class="text-xs text-gray-600 mb-2 font-mono" x-text="output ? '\u21b3 ' + output.inputText : ''"></div>
+                        <div class="text-lg font-mono font-semibold text-axon-output leading-relaxed" x-text="output ? output.axon : ''"></div>
+                        <div class="text-xs text-gray-500 mt-3 font-mono" x-text="output ? output.annotation : ''"></div>
+                        <div class="text-xs text-gray-600 mt-1 font-mono" x-text="output ? `tokens: ${output.inputTokens} \u2192 ${output.axonTokens}` : ''"></div>
+                    </div>
+                </div>
+
+                <!-- Quick Examples -->
+                <div class="mb-8">
+                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Try an example</h3>
+                    <div class="grid gap-2">
+                        <template x-for="ex in quickExamples" :key="ex">
+                            <button @click="setExample(ex)" class="text-left text-sm px-4 py-2.5 rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200 hover:border-axon-accent/40 hover:bg-axon-accent/5 transition text-gray-400 dark:text-gray-400 text-gray-600 font-mono truncate" x-text="ex"></button>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="text-center p-4 rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200">
+                        <div class="text-2xl font-bold text-white dark:text-white text-gray-900">700+</div>
+                        <div class="text-xs text-gray-500 mt-1">Test cases</div>
+                    </div>
+                    <div class="text-center p-4 rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200">
+                        <div class="text-2xl font-bold text-axon-positive">~71%</div>
+                        <div class="text-xs text-gray-500 mt-1">Avg token savings</div>
+                    </div>
+                    <div class="text-center p-4 rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200">
+                        <div class="text-2xl font-bold text-white dark:text-white text-gray-900">0</div>
+                        <div class="text-xs text-gray-500 mt-1">Network requests</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══ SPECIFICATION ═══ -->
+            <section x-show="section === 'spec'" x-transition class="fade-in">
+                <h1 class="text-3xl font-bold text-white dark:text-white text-gray-900 mb-2">Specification</h1>
+                <p class="text-gray-400 dark:text-gray-400 text-gray-600 mb-8">AXON v1.1 — ASCII-only operators, conditional sigils, tiered abbreviation levels, compound merging, response compression.</p>
+
+                <!-- Type Sigils -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Type Sigils</h2>
+                    <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 mb-4">Sigils are applied conditionally &mdash; only to tokens in the known entity/concept/verb databases. Unknown tokens are emitted bare.</p>
+                    <div class="overflow-x-auto rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-900 dark:bg-gray-900 bg-gray-100">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Sigil</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Example</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-800 dark:divide-gray-800 divide-gray-200">
+                                <tr><td class="px-4 py-2"><span class="sigil-badge bg-blue-500/15 text-blue-400">@</span></td><td class="px-4 py-2">Entity / Agent</td><td class="px-4 py-2 font-mono text-axon-output">@sun @openai @user</td></tr>
+                                <tr><td class="px-4 py-2"><span class="sigil-badge bg-purple-500/15 text-purple-400">#</span></td><td class="px-4 py-2">Concept / Abstract</td><td class="px-4 py-2 font-mono text-axon-output">#gravity #justice</td></tr>
+                                <tr><td class="px-4 py-2"><span class="sigil-badge bg-green-500/15 text-green-400">~</span></td><td class="px-4 py-2">Process / Action</td><td class="px-4 py-2 font-mono text-axon-output">~emit ~learn</td></tr>
+                                <tr><td class="px-4 py-2"><span class="sigil-badge bg-amber-500/15 text-amber-400">$</span></td><td class="px-4 py-2">Scalar / Value</td><td class="px-4 py-2 font-mono text-axon-output">$high $3.14</td></tr>
+                                <tr><td class="px-4 py-2"><span class="sigil-badge bg-cyan-500/15 text-cyan-400">^</span></td><td class="px-4 py-2">Temporal</td><td class="px-4 py-2 font-mono text-axon-output">^now ^T+3d</td></tr>
+                                <tr><td class="px-4 py-2"><span class="sigil-badge bg-red-500/15 text-red-400">!</span></td><td class="px-4 py-2">Negation</td><td class="px-4 py-2 font-mono text-axon-output">!evidence !data</td></tr>
+                                <tr><td class="px-4 py-2"><span class="sigil-badge bg-yellow-500/15 text-yellow-400">?</span></td><td class="px-4 py-2">Query / Unknown</td><td class="px-4 py-2 font-mono text-axon-output">?cause ?result</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Operators -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Operators <span class="text-sm font-normal text-gray-500">(ASCII only)</span></h2>
+                    <div class="overflow-x-auto rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-900 dark:bg-gray-900 bg-gray-100">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Operator</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Reads as</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-800 dark:divide-gray-800 divide-gray-200">
+                                <tr><td class="px-4 py-2 font-mono font-semibold text-axon-output">-></td><td class="px-4 py-2">Causes</td><td class="px-4 py-2 text-gray-500">"leads to"</td></tr>
+                                <tr><td class="px-4 py-2 font-mono font-semibold text-axon-output">&lt;-</td><td class="px-4 py-2">Result of</td><td class="px-4 py-2 text-gray-500">"caused by"</td></tr>
+                                <tr><td class="px-4 py-2 font-mono font-semibold text-axon-output">:.</td><td class="px-4 py-2">Therefore</td><td class="px-4 py-2 text-gray-500">"conclusion"</td></tr>
+                                <tr><td class="px-4 py-2 font-mono font-semibold text-axon-output">bc</td><td class="px-4 py-2">Because</td><td class="px-4 py-2 text-gray-500">"premise / reason"</td></tr>
+                                <tr><td class="px-4 py-2 font-mono font-semibold text-axon-output">&&</td><td class="px-4 py-2">And</td><td class="px-4 py-2 text-gray-500">"conjunction"</td></tr>
+                                <tr><td class="px-4 py-2 font-mono font-semibold text-axon-output">||</td><td class="px-4 py-2">Or</td><td class="px-4 py-2 text-gray-500">"disjunction"</td></tr>
+                                <tr><td class="px-4 py-2 font-mono font-semibold text-axon-output">A.</td><td class="px-4 py-2">For all</td><td class="px-4 py-2 text-gray-500">"universal"</td></tr>
+                                <tr><td class="px-4 py-2 font-mono font-semibold text-axon-output">E.</td><td class="px-4 py-2">Exists</td><td class="px-4 py-2 text-gray-500">"existential"</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Confidence -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Confidence Markers</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        <div class="px-4 py-3 rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200"><span class="font-mono text-axon-output font-semibold">!!</span> <span class="text-sm text-gray-400 ml-2">Certain</span></div>
+                        <div class="px-4 py-3 rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200"><span class="font-mono text-axon-output font-semibold">!</span> <span class="text-sm text-gray-400 ml-2">High</span></div>
+                        <div class="px-4 py-3 rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200"><span class="font-mono text-axon-output font-semibold">~</span> <span class="text-sm text-gray-400 ml-2">Moderate</span></div>
+                        <div class="px-4 py-3 rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200"><span class="font-mono text-axon-output font-semibold">*</span> <span class="text-sm text-gray-400 ml-2">Low</span></div>
+                        <div class="px-4 py-3 rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200"><span class="font-mono text-axon-output font-semibold">**</span> <span class="text-sm text-gray-400 ml-2">Speculative</span></div>
+                        <div class="px-4 py-3 rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200"><span class="font-mono text-axon-output font-semibold">?</span> <span class="text-sm text-gray-400 ml-2">Unknown</span></div>
+                    </div>
+                </div>
+
+                <!-- Temporal -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Temporal Markers</h2>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="px-4 py-3 rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200"><span class="font-mono text-axon-output">^now</span> <span class="text-sm text-gray-500 ml-2">current moment</span></div>
+                        <div class="px-4 py-3 rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200"><span class="font-mono text-axon-output">^T-7d</span> <span class="text-sm text-gray-500 ml-2">one week ago</span></div>
+                        <div class="px-4 py-3 rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200"><span class="font-mono text-axon-output">^T+30d</span> <span class="text-sm text-gray-500 ml-2">next month</span></div>
+                        <div class="px-4 py-3 rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200"><span class="font-mono text-axon-output">^A.t</span> <span class="text-sm text-gray-500 ml-2">always / all time</span></div>
+                    </div>
+                </div>
+
+                <!-- Abbreviation Tiers -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Abbreviation Tiers <span class="text-sm font-normal text-gray-500">(v1.1)</span></h2>
+                    <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 mb-4">AXON supports four abbreviation levels, each inclusive of the previous. Select a level to match your compression needs.</p>
+
+                    <!-- Tier selector -->
+                    <div class="flex gap-2 mb-4">
+                        <template x-for="tier in abbrevTiers" :key="tier.level">
+                            <button @click="activeTier = tier.level"
+                                class="px-3 py-1.5 rounded-lg border text-sm font-medium transition"
+                                :class="activeTier === tier.level
+                                    ? 'border-axon-accent bg-axon-accent/15 text-axon-accent'
+                                    : 'border-gray-800 dark:border-gray-800 border-gray-200 text-gray-400 hover:border-axon-accent/40'">
+                                <span class="font-mono" x-text="'L' + tier.level"></span>
+                                <span class="ml-1 text-xs opacity-70" x-text="tier.name"></span>
+                            </button>
+                        </template>
+                    </div>
+
+                    <p class="text-xs text-gray-500 mb-3" x-text="abbrevTiers[activeTier].desc"></p>
+
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm font-mono">
+                        <template x-for="[full, abbr] in abbrevTiers[activeTier].entries" :key="full">
+                            <div class="px-3 py-1.5 rounded border border-gray-800 dark:border-gray-800 border-gray-200 flex justify-between">
+                                <span class="text-gray-400" x-text="full"></span>
+                                <span class="text-axon-output font-semibold" x-text="abbr"></span>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Commands -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Command Verbs <span class="font-mono text-axon-output text-base ml-1">&gt;</span></h2>
+                    <div class="flex flex-wrap gap-2">
+                        <template x-for="cmd in commands" :key="cmd">
+                            <span class="px-3 py-1 rounded-full border border-gray-800 dark:border-gray-800 border-gray-200 font-mono text-sm text-axon-output" x-text="'>' + cmd"></span>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Queries -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Query Types <span class="font-mono text-axon-output text-base ml-1">?</span></h2>
+                    <div class="flex flex-wrap gap-2">
+                        <template x-for="q in queries" :key="q">
+                            <span class="px-3 py-1 rounded-full border border-gray-800 dark:border-gray-800 border-gray-200 font-mono text-sm text-axon-output" x-text="'?' + q"></span>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Structural -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Structural Operations</h2>
+                    <div class="overflow-x-auto rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-900 dark:bg-gray-900 bg-gray-100">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Syntax</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Meaning</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-800 dark:divide-gray-800 divide-gray-200">
+                                <tr><td class="px-4 py-2 font-mono text-axon-output">@Type+.field</td><td class="px-4 py-2">Add field</td></tr>
+                                <tr><td class="px-4 py-2 font-mono text-axon-output">@Type-.field</td><td class="px-4 py-2">Remove field</td></tr>
+                                <tr><td class="px-4 py-2 font-mono text-axon-output">@Type.x=$v</td><td class="px-4 py-2">Set field value</td></tr>
+                                <tr><td class="px-4 py-2 font-mono text-axon-output">@Type.x:T</td><td class="px-4 py-2">Set field type</td></tr>
+                                <tr><td class="px-4 py-2 font-mono text-axon-output">@Type:impl(@Trait)</td><td class="px-4 py-2">Implement trait</td></tr>
+                                <tr><td class="px-4 py-2 font-mono text-axon-output">@Child&lt;@Parent</td><td class="px-4 py-2">Inherit / extend</td></tr>
+                                <tr><td class="px-4 py-2 font-mono text-axon-output">+use(module)</td><td class="px-4 py-2">Add import</td></tr>
+                                <tr><td class="px-4 py-2 font-mono text-axon-output">-use(module)</td><td class="px-4 py-2">Remove import</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══ EXAMPLES ═══ -->
+            <section x-show="section === 'examples'" x-transition class="fade-in">
+                <h1 class="text-3xl font-bold text-white dark:text-white text-gray-900 mb-2">Examples</h1>
+                <p class="text-gray-400 dark:text-gray-400 text-gray-600 mb-8">Curated translations showing AXON v1.1 in action. Click any example to try it in the playground.</p>
+
+                <template x-for="cat in exampleCategories" :key="cat.name">
+                    <div class="mb-8">
+                        <h2 class="text-lg font-semibold text-white dark:text-white text-gray-900 mb-3" x-text="cat.name"></h2>
+                        <div class="grid gap-3">
+                            <template x-for="ex in cat.items" :key="ex.input">
+                                <button @click="go('playground'); $nextTick(() => setExample(ex.input))"
+                                    class="text-left rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200 p-4 hover:border-axon-accent/40 hover:bg-axon-accent/5 transition">
+                                    <div class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 mb-1" x-text="ex.input"></div>
+                                    <div class="font-mono text-axon-output font-semibold" x-text="ex.axon"></div>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </section>
+
+            <!-- ═══ LLM PROMPT ═══ -->
+            <section x-show="section === 'prompt'" x-transition class="fade-in">
+                <h1 class="text-3xl font-bold text-white dark:text-white text-gray-900 mb-2">LLM Prompt</h1>
+                <p class="text-gray-400 dark:text-gray-400 text-gray-600 mb-6">Paste this system prompt into any LLM to enable AXON v1.1 notation understanding.</p>
+
+                <div class="relative rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200 overflow-hidden">
+                    <div class="flex items-center justify-between px-4 py-2 border-b border-gray-800 dark:border-gray-800 border-gray-200 bg-gray-900 dark:bg-gray-900 bg-gray-100">
+                        <span class="text-xs font-medium text-gray-500">System Prompt</span>
+                        <button @click="copyPrompt()" class="text-xs px-3 py-1 rounded-md bg-axon-accent/15 text-axon-accent hover:bg-axon-accent/25 transition font-medium">
+                            Copy to clipboard
+                        </button>
+                    </div>
+                    <pre class="p-4 text-sm font-mono text-gray-300 dark:text-gray-300 text-gray-700 overflow-x-auto leading-relaxed whitespace-pre-wrap" x-ref="promptText">You are an expert in AXON v1.1 — AI eXchange Optimized Notation, a compact symbolic language that compresses natural language into token-efficient expressions.
+
+## Sigils (applied only to known entities/concepts/verbs; unknown tokens are bare)
+@ = Entity/Agent  # = Concept  ~ = Process/Action  $ = Scalar  ^ = Temporal  ! = Negation  ? = Query
+
+## Operators (ASCII only)
+-> = causes  <- = caused by  :. = therefore  bc = because
+&& = and  || = or  A. = for all  E. = exists
+
+## Abbreviation Tiers (each level includes all previous)
+L0 (default): object->obj, function->fn, component->comp, database->db, connection->conn,
+  implementation->impl, authentication->auth, application->app, configuration->cfg,
+  environment->env, performance->perf, memory->mem, render->rnd, parameter->param
+L1 (extended): protocol->proto, process->proc, algorithm->algo, container->ctr,
+  endpoint->ep, interface->iface, architecture->arch, library->lib, package->pkg
+L2 (aggressive): between->btw, difference->diff, example->ex, strategy->strat,
+  alternative->alt, mechanism->mech, automatic->auto, distributed->distrib
+L3 (maximum): function->f, variable->v, string->s, number->n, boolean->b, message->m
+
+## Rules
+1. Strip filler words, articles, copulas, pleasantries
+2. Sigil only known entities (@), concepts (#), verbs (~), scalars ($)
+3. Unknown tokens get NO sigil — consecutive bare tokens hyphenate into compounds
+4. Abbreviate using the active tier (default L0)
+5. Confidence markers: !! (certain) ! (high) ~ (moderate) * (low) ** (speculative)
+6. Temporal: ^now ^T-Nd ^T+Nd ^A.t
+
+## Programming Commands
+>doc >impl >fix >test >rev >ref >opt >plan >dep >add >rm >up >mv >cfg >mig
+>db >api >ci >sec >err >log >bench >lint >merge >explain
+
+## Programming Queries
+?how ?why ?best ?what ?diff ?when ?where ?can ?cmp ?alt ?err ?perf
+
+## Structural Operations
+@Type+.field  @Type-.field  @Type.x=$v  @Type.x:T  @Type:impl(@Trait)  @A&lt;@B  +use(mod)  -use(mod)
+
+## Response Compression (optional — add to system prompt for output savings)
+Respond using AXON notation where applicable: sigils, operators, abbreviations. Strip filler. Be terse.
+
+## Examples
+"fix the bug in the auth service" -> >fix bug:auth-service
+"explain database connection pooling" -> >explain db-conn-pooling
+"what is the best way to cache" -> ?best cache
+"The sun emits ultraviolet radiation" -> @sun ~emit #ultraviolet #radiation
+"add a field email to User" -> @user+.email</pre>
+                </div>
+
+            </section>
+
+            <!-- ═══ VS CODE EXTENSION ═══ -->
+            <section x-show="section === 'vscode'" x-transition class="fade-in">
+                <h1 class="text-3xl font-bold text-white dark:text-white text-gray-900 mb-2">VS Code Extension</h1>
+                <p class="text-gray-400 dark:text-gray-400 text-gray-600 mb-8 text-lg">Translate prompts to AXON notation directly inside VS Code — saving tokens on every AI interaction.</p>
+
+                <!-- Install -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Install</h2>
+                    <div class="rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200 bg-axon-surface dark:bg-axon-surface bg-gray-50 overflow-hidden">
+                        <div class="p-5">
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 mb-4">Install from the VS Code Marketplace or the command line:</p>
+                            <div class="rounded-lg bg-gray-900 dark:bg-gray-900 bg-gray-100 p-4 font-mono text-sm text-axon-output mb-4 flex items-center justify-between">
+                                <span>code --install-extension colwill.axon-notation</span>
+                                <button @click="copyText('code --install-extension colwill.axon-notation')" class="ml-3 text-xs px-2 py-1 rounded bg-axon-accent/15 text-axon-accent hover:bg-axon-accent/25 transition shrink-0">Copy</button>
+                            </div>
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 mb-3">Or search for <span class="font-mono text-axon-output">AXON Notation</span> in the VS Code Extensions panel (<span class="font-mono text-sm">Ctrl+Shift+X</span>).</p>
+                            <a href="https://marketplace.visualstudio.com/items?itemName=colwill.axon-notation" target="_blank"
+                               class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-axon-accent text-white text-sm font-medium hover:bg-axon-accent/90 transition">
+                                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M17.583 2.603L9.88 9.71.72 3.395a.9.9 0 0 0-1.057.07.9.9 0 0 0-.283.715v15.64a.9.9 0 0 0 .283.715.9.9 0 0 0 1.057.07l9.16-6.316 7.703 7.108A1.5 1.5 0 0 0 19.5 20.4V3.6a1.5 1.5 0 0 0-1.917-.997z"/></svg>
+                                View on Marketplace
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Features -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Features</h2>
+                    <div class="grid gap-4">
+                        <div class="rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200 p-4">
+                            <h3 class="font-semibold text-white dark:text-white text-gray-900 mb-1">Chat Participant <span class="font-mono text-axon-accent text-sm ml-1">@axon</span></h3>
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600">Type <span class="font-mono text-axon-output">@axon</span> in VS Code's chat panel to route prompts through AXON. Your input is translated to compact notation, sent to the language model, and the response is returned as normal.</p>
+                        </div>
+                        <div class="rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200 p-4">
+                            <h3 class="font-semibold text-white dark:text-white text-gray-900 mb-1">Sidebar Chat</h3>
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600">A dedicated AXON chat panel in the activity bar. Open it with <span class="font-mono text-sm">Ctrl+Shift+A</span> (<span class="font-mono text-sm">Cmd+Shift+A</span> on macOS) or via the command palette.</p>
+                        </div>
+                        <div class="rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200 p-4">
+                            <h3 class="font-semibold text-white dark:text-white text-gray-900 mb-1">Multiple Targets</h3>
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600">Send translated output to Claude Code, GitHub Copilot, clipboard, or the built-in chat — choose your preferred workflow.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Commands -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Commands</h2>
+                    <div class="overflow-x-auto rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-900 dark:bg-gray-900 bg-gray-100">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Command</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-800 dark:divide-gray-800 divide-gray-200">
+                                <tr><td class="px-4 py-2 font-mono text-axon-output">AXON: Open Chat</td><td class="px-4 py-2">Focus the AXON sidebar panel</td></tr>
+                                <tr><td class="px-4 py-2 font-mono text-axon-output">AXON: Translate to AXON</td><td class="px-4 py-2">Translate text and choose where to send it</td></tr>
+                                <tr><td class="px-4 py-2 font-mono text-axon-output">AXON: Translate and Send to Claude Code</td><td class="px-4 py-2">Translate and send directly to Claude Code</td></tr>
+                                <tr><td class="px-4 py-2 font-mono text-axon-output">AXON: Translate and Send to Copilot Chat</td><td class="px-4 py-2">Translate and send to GitHub Copilot</td></tr>
+                                <tr><td class="px-4 py-2 font-mono text-axon-output">AXON: Translate and Copy to Clipboard</td><td class="px-4 py-2">Translate and copy the result</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- How It Works -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">How It Works</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="text-center p-4 rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200">
+                            <div class="text-2xl mb-2">1</div>
+                            <div class="text-sm text-gray-400 dark:text-gray-400 text-gray-600">Type a natural language prompt</div>
+                        </div>
+                        <div class="text-center p-4 rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200">
+                            <div class="text-2xl mb-2">2</div>
+                            <div class="text-sm text-gray-400 dark:text-gray-400 text-gray-600">WASM engine translates to AXON</div>
+                        </div>
+                        <div class="text-center p-4 rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200">
+                            <div class="text-2xl mb-2">3</div>
+                            <div class="text-sm text-gray-400 dark:text-gray-400 text-gray-600">Compressed prompt sent to AI</div>
+                        </div>
+                        <div class="text-center p-4 rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200">
+                            <div class="text-2xl mb-2">4</div>
+                            <div class="text-sm text-gray-400 dark:text-gray-400 text-gray-600">Same response, fewer tokens</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Translation Examples -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Translation Examples</h2>
+                    <div class="overflow-x-auto rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-900 dark:bg-gray-900 bg-gray-100">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Natural Language</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">AXON</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-800 dark:divide-gray-800 divide-gray-200">
+                                <tr><td class="px-4 py-2 text-gray-400">what is the best way to implement caching</td><td class="px-4 py-2 font-mono text-axon-output font-semibold">?best impl-caching</td></tr>
+                                <tr><td class="px-4 py-2 text-gray-400">fix the bug in the auth service</td><td class="px-4 py-2 font-mono text-axon-output font-semibold">>fix bug:auth-service</td></tr>
+                                <tr><td class="px-4 py-2 text-gray-400">add a field email to User</td><td class="px-4 py-2 font-mono text-axon-output font-semibold">@user+.email</td></tr>
+                                <tr><td class="px-4 py-2 text-gray-400">CO2 emissions cause climate change which increases temperature</td><td class="px-4 py-2 font-mono text-axon-output font-semibold">@CO2-emission &rarr; #climate-change!! &rarr; &Delta;$temp&uarr;</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Requirements -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="text-center p-4 rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200">
+                        <div class="text-lg font-bold text-white dark:text-white text-gray-900">VS Code 1.93+</div>
+                        <div class="text-xs text-gray-500 mt-1">Minimum version</div>
+                    </div>
+                    <div class="text-center p-4 rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200">
+                        <div class="text-lg font-bold text-axon-positive">0 API keys</div>
+                        <div class="text-xs text-gray-500 mt-1">Runs locally via WASM</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══ CLAUDE CODE SKILL ═══ -->
+            <section x-show="section === 'claudecode'" x-transition class="fade-in">
+                <h1 class="text-3xl font-bold text-white dark:text-white text-gray-900 mb-2">Claude Code Skill</h1>
+                <p class="text-gray-400 dark:text-gray-400 text-gray-600 mb-8 text-lg">Use AXON notation directly inside Claude Code with the <span class="font-mono text-axon-output">/axon</span> slash command. Translate between natural language and AXON without leaving your terminal.</p>
+
+                <!-- Install -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Install from Skill Marketplace</h2>
+                    <div class="rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200 bg-axon-surface dark:bg-axon-surface bg-gray-50 overflow-hidden">
+                        <div class="p-5">
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 mb-4">Install the AXON skill directly from the Claude Code skill marketplace:</p>
+                            <div class="rounded-lg bg-gray-900 dark:bg-gray-900 bg-gray-100 p-4 font-mono text-sm text-axon-output mb-4 flex items-center justify-between">
+                                <span>claude install-skill https://github.com/colwill/axon</span>
+                                <button @click="copyText('claude install-skill https://github.com/colwill/axon')" class="ml-3 text-xs px-2 py-1 rounded bg-axon-accent/15 text-axon-accent hover:bg-axon-accent/25 transition shrink-0">Copy</button>
+                            </div>
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 mb-3">Or install interactively from within Claude Code:</p>
+                            <div class="rounded-lg bg-gray-900 dark:bg-gray-900 bg-gray-100 p-4 font-mono text-sm text-axon-output mb-4 flex items-center justify-between">
+                                <span>/install-skill https://github.com/colwill/axon</span>
+                                <button @click="copyText('/install-skill https://github.com/colwill/axon')" class="ml-3 text-xs px-2 py-1 rounded bg-axon-accent/15 text-axon-accent hover:bg-axon-accent/25 transition shrink-0">Copy</button>
+                            </div>
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600">Once installed, the <span class="font-mono text-axon-output">/axon</span> slash command becomes available in all your Claude Code sessions.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Usage -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Usage</h2>
+                    <div class="grid gap-4">
+                        <div class="rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200 p-4">
+                            <h3 class="font-semibold text-white dark:text-white text-gray-900 mb-2">Encode natural language</h3>
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 mb-3">Pass any natural language text to get the AXON translation:</p>
+                            <div class="rounded-lg bg-gray-900 dark:bg-gray-900 bg-gray-100 p-4 font-mono text-sm leading-relaxed">
+                                <div class="text-gray-500">$</div>
+                                <div class="text-axon-output">/axon fix the bug in the authentication service</div>
+                                <div class="text-axon-positive mt-2">&rarr; >fix bug:auth-service</div>
+                            </div>
+                        </div>
+                        <div class="rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200 p-4">
+                            <h3 class="font-semibold text-white dark:text-white text-gray-900 mb-2">Decode AXON notation</h3>
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 mb-3">Pass AXON notation to get a natural language explanation:</p>
+                            <div class="rounded-lg bg-gray-900 dark:bg-gray-900 bg-gray-100 p-4 font-mono text-sm leading-relaxed">
+                                <div class="text-gray-500">$</div>
+                                <div class="text-axon-output">/axon @sun ~emit* #uv-radiation</div>
+                                <div class="text-axon-positive mt-2">&rarr; The sun probably emits ultraviolet radiation.</div>
+                            </div>
+                        </div>
+                        <div class="rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200 p-4">
+                            <h3 class="font-semibold text-white dark:text-white text-gray-900 mb-2">Interactive mode</h3>
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 mb-3">Use <span class="font-mono text-axon-output">/axon</span> without arguments to start an interactive session where Claude will translate and explain AXON expressions.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- What the Skill Does -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">What the Skill Does</h2>
+                    <div class="grid gap-4">
+                        <div class="rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200 p-4">
+                            <h3 class="font-semibold text-white dark:text-white text-gray-900 mb-1">Auto-detect direction</h3>
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600">Automatically detects whether you're providing natural language or AXON notation and translates in the appropriate direction.</p>
+                        </div>
+                        <div class="rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200 p-4">
+                            <h3 class="font-semibold text-white dark:text-white text-gray-900 mb-1">Token savings</h3>
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600">Shows the token count comparison between the original text and the AXON translation, so you can see the savings.</p>
+                        </div>
+                        <div class="rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200 p-4">
+                            <h3 class="font-semibold text-white dark:text-white text-gray-900 mb-1">Annotated output</h3>
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600">Each sigil and operator is annotated so you can learn the notation as you use it.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Requirements -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="text-center p-4 rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200">
+                        <div class="text-lg font-bold text-white dark:text-white text-gray-900">Claude Code</div>
+                        <div class="text-xs text-gray-500 mt-1">CLI or IDE extension</div>
+                    </div>
+                    <div class="text-center p-4 rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200">
+                        <div class="text-lg font-bold text-axon-positive">0 config</div>
+                        <div class="text-xs text-gray-500 mt-1">Works immediately after install</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══ +CAVEMAN ═══ -->
+            <section x-show="section === 'caveman'" x-transition class="fade-in">
+                <h1 class="text-3xl font-bold text-white dark:text-white text-gray-900 mb-2">AXON <span class="text-axon-accent">+</span> Caveman</h1>
+                <p class="text-gray-400 dark:text-gray-400 text-gray-600 mb-8 text-lg">AXON compresses the prompt. <a href="https://github.com/JuliusBrussee/caveman" target="_blank" class="text-axon-accent hover:underline">Caveman</a> compresses the response. Together they achieve the best total token savings of any approach tested.</p>
+
+                <!-- Key insight -->
+                <div class="mb-10 rounded-xl border border-axon-accent/30 bg-axon-accent/5 p-5">
+                    <div class="flex items-start gap-3">
+                        <div class="text-axon-accent text-xl mt-0.5">*</div>
+                        <div>
+                            <p class="text-sm text-gray-300 dark:text-gray-300 text-gray-700 leading-relaxed">AXON and Caveman operate on <strong class="text-white dark:text-white text-gray-900">different sides of the pipe</strong>. AXON rewrites your prompt into compact notation (input tokens), while Caveman instructs the model to respond concisely (output tokens). They don't overlap — they stack.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Architecture Diagram -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Inference Architecture</h2>
+                    <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 mb-4">Where each approach operates in the LLM inference pipeline.</p>
+                    <div class="rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200 bg-axon-surface dark:bg-axon-surface bg-gray-50 p-4 overflow-x-auto">
+                        <svg viewBox="0 0 880 420" class="w-full" style="min-width:700px" xmlns="http://www.w3.org/2000/svg" font-family="'JetBrains Mono',monospace">
+                            <defs>
+                                <marker id="arrow" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-auto"><path d="M0,0 L10,3.5 L0,7z" fill="#555"/></marker>
+                                <marker id="arrow-purple" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-auto"><path d="M0,0 L10,3.5 L0,7z" fill="#7c5cfc"/></marker>
+                                <marker id="arrow-amber" viewBox="0 0 10 7" refX="9" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-auto"><path d="M0,0 L10,3.5 L0,7z" fill="#f59e0b"/></marker>
+                                <linearGradient id="axon-grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7c5cfc" stop-opacity="0.15"/><stop offset="100%" stop-color="#7c5cfc" stop-opacity="0.03"/></linearGradient>
+                                <linearGradient id="cave-grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#f59e0b" stop-opacity="0.15"/><stop offset="100%" stop-color="#f59e0b" stop-opacity="0.03"/></linearGradient>
+                            </defs>
+
+                            <!-- AXON zone background -->
+                            <rect x="16" y="50" width="310" height="360" rx="12" fill="url(#axon-grad)" stroke="#7c5cfc" stroke-width="1" stroke-opacity="0.25" stroke-dasharray="4,4"/>
+                            <text x="171" y="77" text-anchor="middle" fill="#7c5cfc" font-size="11" font-weight="600" letter-spacing="0.1em">AXON DOMAIN</text>
+                            <text x="171" y="93" text-anchor="middle" fill="#7c5cfc" font-size="9" opacity="0.6">prompt compression</text>
+
+                            <!-- Caveman zone background -->
+                            <rect x="554" y="50" width="310" height="360" rx="12" fill="url(#cave-grad)" stroke="#f59e0b" stroke-width="1" stroke-opacity="0.25" stroke-dasharray="4,4"/>
+                            <text x="709" y="77" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="600" letter-spacing="0.1em">CAVEMAN DOMAIN</text>
+                            <text x="709" y="93" text-anchor="middle" fill="#f59e0b" font-size="9" opacity="0.6">response compression</text>
+
+                            <!-- ── Pipeline Stage 1: User prompt ── -->
+                            <rect x="36" y="120" width="130" height="56" rx="8" fill="#1e1e1e" stroke="#333" stroke-width="1"/>
+                            <text x="101" y="145" text-anchor="middle" fill="#e5e5e5" font-size="11" font-weight="600">User Prompt</text>
+                            <text x="101" y="163" text-anchor="middle" fill="#888" font-size="9">natural language</text>
+
+                            <!-- Token count badge: 105 -->
+                            <rect x="73" y="181" width="56" height="20" rx="10" fill="#1e1e1e" stroke="#555" stroke-width="0.5"/>
+                            <text x="101" y="195" text-anchor="middle" fill="#999" font-size="9" font-weight="500">105 tok</text>
+
+                            <!-- Arrow: User -> AXON Translator -->
+                            <line x1="166" y1="148" x2="196" y2="148" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+                            <!-- ── Pipeline Stage 2: AXON Translator ── -->
+                            <rect x="200" y="120" width="110" height="56" rx="8" fill="#7c5cfc" fill-opacity="0.12" stroke="#7c5cfc" stroke-width="1.5"/>
+                            <text x="255" y="141" text-anchor="middle" fill="#a78bfa" font-size="10" font-weight="700">AXON</text>
+                            <text x="255" y="155" text-anchor="middle" fill="#a78bfa" font-size="9">Translator</text>
+                            <text x="255" y="168" text-anchor="middle" fill="#7c5cfc" font-size="8" opacity="0.7">sigils + abbrev</text>
+
+                            <!-- Savings badge under AXON -->
+                            <rect x="218" y="181" width="74" height="20" rx="10" fill="#4ade80" fill-opacity="0.12" stroke="#4ade80" stroke-width="0.5"/>
+                            <text x="255" y="195" text-anchor="middle" fill="#4ade80" font-size="9" font-weight="600">-35% input</text>
+
+                            <!-- Token count: 68 tok -->
+                            <rect x="227" y="207" width="56" height="20" rx="10" fill="#1e1e1e" stroke="#7c5cfc" stroke-width="0.5"/>
+                            <text x="255" y="221" text-anchor="middle" fill="#a78bfa" font-size="9" font-weight="500">68 tok</text>
+
+                            <!-- Arrow: AXON -> Tokenizer -->
+                            <line x1="310" y1="148" x2="340" y2="148" stroke="#7c5cfc" stroke-width="1.5" marker-end="url(#arrow-purple)"/>
+
+                            <!-- ── Pipeline Stage 3: Tokenizer ── -->
+                            <rect x="344" y="120" width="96" height="56" rx="8" fill="#1e1e1e" stroke="#444" stroke-width="1"/>
+                            <text x="392" y="145" text-anchor="middle" fill="#e5e5e5" font-size="11" font-weight="600">Tokenizer</text>
+                            <text x="392" y="163" text-anchor="middle" fill="#888" font-size="9">BPE encode</text>
+
+                            <!-- Arrow: Tokenizer -> Model -->
+                            <line x1="392" y1="176" x2="392" y2="236" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+                            <!-- ── Pipeline Stage 4: LLM Model (center) ── -->
+                            <rect x="336" y="240" width="112" height="70" rx="10" fill="#1e1e1e" stroke="#555" stroke-width="1.5"/>
+                            <text x="392" y="268" text-anchor="middle" fill="#e5e5e5" font-size="12" font-weight="700">LLM</text>
+                            <text x="392" y="285" text-anchor="middle" fill="#888" font-size="9">inference</text>
+                            <text x="392" y="299" text-anchor="middle" fill="#666" font-size="8">attention + generation</text>
+
+                            <!-- Caveman system prompt injection arrow -->
+                            <rect x="574" y="240" width="120" height="56" rx="8" fill="#f59e0b" fill-opacity="0.12" stroke="#f59e0b" stroke-width="1.5"/>
+                            <text x="634" y="261" text-anchor="middle" fill="#fbbf24" font-size="10" font-weight="700">Caveman</text>
+                            <text x="634" y="275" text-anchor="middle" fill="#fbbf24" font-size="9">System Prompt</text>
+                            <text x="634" y="288" text-anchor="middle" fill="#f59e0b" font-size="8" opacity="0.7">"be terse, no fluff"</text>
+
+                            <!-- Arrow: Caveman -> LLM (injects into model behavior) -->
+                            <line x1="574" y1="268" x2="452" y2="268" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arrow-amber)"/>
+                            <text x="513" y="260" text-anchor="middle" fill="#f59e0b" font-size="8" opacity="0.7">shapes</text>
+                            <text x="513" y="272" text-anchor="middle" fill="#f59e0b" font-size="8" opacity="0.7">output</text>
+
+                            <!-- Arrow: Model -> Detokenizer -->
+                            <line x1="392" y1="310" x2="392" y2="340" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+                            <!-- ── Pipeline Stage 5: Detokenizer ── -->
+                            <rect x="340" y="344" width="104" height="50" rx="8" fill="#1e1e1e" stroke="#444" stroke-width="1"/>
+                            <text x="392" y="367" text-anchor="middle" fill="#e5e5e5" font-size="11" font-weight="600">Detokenizer</text>
+                            <text x="392" y="383" text-anchor="middle" fill="#888" font-size="9">BPE decode</text>
+
+                            <!-- Arrow: Detokenizer -> Response -->
+                            <line x1="444" y1="369" x2="568" y2="369" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arrow-amber)"/>
+
+                            <!-- ── Pipeline Stage 6: Response ── -->
+                            <rect x="572" y="335" width="140" height="56" rx="8" fill="#1e1e1e" stroke="#333" stroke-width="1"/>
+                            <text x="642" y="358" text-anchor="middle" fill="#e5e5e5" font-size="11" font-weight="600">Response</text>
+                            <text x="642" y="374" text-anchor="middle" fill="#888" font-size="9">concise output</text>
+
+                            <!-- Savings badge under Response -->
+                            <rect x="601" y="396" width="82" height="20" rx="10" fill="#4ade80" fill-opacity="0.12" stroke="#4ade80" stroke-width="0.5"/>
+                            <text x="642" y="410" text-anchor="middle" fill="#4ade80" font-size="9" font-weight="600">-47% output</text>
+
+                            <!-- Token count: baseline 2038 vs caveman 1071 -->
+                            <rect x="716" y="349" width="72" height="18" rx="9" fill="#1e1e1e" stroke="#555" stroke-width="0.5"/>
+                            <text x="752" y="362" text-anchor="middle" fill="#666" font-size="8"><tspan text-decoration="line-through">2,038</tspan></text>
+                            <rect x="716" y="371" width="72" height="18" rx="9" fill="#1e1e1e" stroke="#f59e0b" stroke-width="0.5"/>
+                            <text x="752" y="384" text-anchor="middle" fill="#fbbf24" font-size="9" font-weight="500">1,071 tok</text>
+
+                            <!-- ── Combined savings callout ── -->
+                            <rect x="340" y="10" width="200" height="30" rx="15" fill="#4ade80" fill-opacity="0.1" stroke="#4ade80" stroke-width="1"/>
+                            <text x="440" y="30" text-anchor="middle" fill="#4ade80" font-size="12" font-weight="700">Combined: -46.9% total cost</text>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Total cost comparison -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Total Token Cost</h2>
+                    <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 mb-4">Prompt + response tokens across 10 technical questions, measured with BPE-aware estimation. Model: Claude Opus 4.6.</p>
+                    <div class="overflow-x-auto rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-900 dark:bg-gray-900 bg-gray-100">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Configuration</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Prompt</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Response</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Total</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">vs Baseline</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-800 dark:divide-gray-800 divide-gray-200">
+                                <tr>
+                                    <td class="px-4 py-2 text-gray-400">Baseline</td>
+                                    <td class="px-4 py-2 text-right font-mono">105</td>
+                                    <td class="px-4 py-2 text-right font-mono">2,038</td>
+                                    <td class="px-4 py-2 text-right font-mono font-semibold text-white dark:text-white text-gray-900">2,143</td>
+                                    <td class="px-4 py-2 text-right text-gray-500">&mdash;</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 text-gray-400">Terse <span class="text-xs text-gray-600">("Answer concisely.")</span></td>
+                                    <td class="px-4 py-2 text-right font-mono">105</td>
+                                    <td class="px-4 py-2 text-right font-mono">2,168</td>
+                                    <td class="px-4 py-2 text-right font-mono">2,273</td>
+                                    <td class="px-4 py-2 text-right font-mono text-red-400">+6.1%</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 text-gray-400">Compress</td>
+                                    <td class="px-4 py-2 text-right font-mono">105</td>
+                                    <td class="px-4 py-2 text-right font-mono">1,690</td>
+                                    <td class="px-4 py-2 text-right font-mono">1,795</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-positive">-16.2%</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 text-gray-400">Caveman</td>
+                                    <td class="px-4 py-2 text-right font-mono">105</td>
+                                    <td class="px-4 py-2 text-right font-mono">1,071</td>
+                                    <td class="px-4 py-2 text-right font-mono">1,176</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-positive">-45.1%</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2 text-gray-400">AXON only</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-output">68</td>
+                                    <td class="px-4 py-2 text-right font-mono">2,038</td>
+                                    <td class="px-4 py-2 text-right font-mono">2,106</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-positive">-1.7%</td>
+                                </tr>
+                                <tr class="bg-axon-accent/5">
+                                    <td class="px-4 py-2 font-semibold text-axon-accent">AXON + Caveman</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-output font-semibold">68</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-output font-semibold">1,071</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-accent font-bold">1,139</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-positive font-bold">-46.9%</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Where each approach saves -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Where Each Approach Saves</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200 p-5">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="font-mono font-bold text-axon-accent">AXON</span>
+                                <span class="text-xs text-gray-500">prompt side</span>
+                            </div>
+                            <div class="text-3xl font-bold text-axon-positive mb-1">35.2%</div>
+                            <p class="text-xs text-gray-500">avg input token savings</p>
+                            <div class="mt-3 space-y-1 text-xs font-mono text-gray-400">
+                                <div>why does my React component re-render...</div>
+                                <div class="text-axon-output">?why react-comp-re-rnd-parent-updates</div>
+                                <div class="text-gray-600 mt-1">13 &rarr; 8 tokens (38.5%)</div>
+                            </div>
+                        </div>
+                        <div class="rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200 p-5">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="font-mono font-bold text-amber-400">Caveman</span>
+                                <span class="text-xs text-gray-500">response side</span>
+                            </div>
+                            <div class="text-3xl font-bold text-axon-positive mb-1">47.4%</div>
+                            <p class="text-xs text-gray-500">avg output token savings</p>
+                            <div class="mt-3 space-y-1 text-xs font-mono text-gray-400">
+                                <div>baseline: 2,038 response tokens</div>
+                                <div class="text-amber-400">caveman: 1,071 response tokens</div>
+                                <div class="text-gray-600 mt-1">same quality, half the tokens</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Per-prompt breakdown -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Per-Prompt Breakdown</h2>
+                    <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 mb-4">AXON prompt savings vs Caveman response savings for each of the 10 benchmark questions.</p>
+                    <div class="overflow-x-auto rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-900 dark:bg-gray-900 bg-gray-100">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Prompt</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-axon-accent/70 uppercase">AXON</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-amber-400/70 uppercase">Caveman</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Compress</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-800 dark:divide-gray-800 divide-gray-200">
+                                <template x-for="row in cavemanData" :key="row.prompt">
+                                    <tr>
+                                        <td class="px-4 py-2 text-gray-400 max-w-xs truncate" x-text="row.prompt"></td>
+                                        <td class="px-4 py-2 text-right font-mono text-axon-output font-semibold" x-text="row.axon + '%'"></td>
+                                        <td class="px-4 py-2 text-right font-mono text-amber-400 font-semibold" x-text="row.caveman + '%'"></td>
+                                        <td class="px-4 py-2 text-right font-mono text-gray-500" x-text="row.compress + '%'"></td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                            <tfoot class="bg-gray-900/50 dark:bg-gray-900/50 bg-gray-50">
+                                <tr>
+                                    <td class="px-4 py-2 font-semibold text-white dark:text-white text-gray-900">Average</td>
+                                    <td class="px-4 py-2 text-right font-mono text-axon-output font-bold">35.2%</td>
+                                    <td class="px-4 py-2 text-right font-mono text-amber-400 font-bold">47.4%</td>
+                                    <td class="px-4 py-2 text-right font-mono text-gray-400 font-bold">17.1%</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- AXON response compression -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Response Text Compression</h2>
+                    <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 mb-4">Running response text through the AXON translator shows additional compression potential on the output side.</p>
+                    <div class="grid grid-cols-3 gap-4">
+                        <div class="text-center p-4 rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200">
+                            <div class="text-xs text-gray-500 mb-1">Baseline responses</div>
+                            <div class="text-2xl font-bold text-axon-positive">41.6%</div>
+                            <div class="text-xs text-gray-600 mt-1">2,038 &rarr; 1,191 tokens</div>
+                        </div>
+                        <div class="text-center p-4 rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200">
+                            <div class="text-xs text-gray-500 mb-1">Caveman responses</div>
+                            <div class="text-2xl font-bold text-axon-positive">34.5%</div>
+                            <div class="text-xs text-gray-600 mt-1">1,071 &rarr; 702 tokens</div>
+                        </div>
+                        <div class="text-center p-4 rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200">
+                            <div class="text-xs text-gray-500 mb-1">Compress responses</div>
+                            <div class="text-2xl font-bold text-axon-positive">40.2%</div>
+                            <div class="text-xs text-gray-600 mt-1">1,690 &rarr; 1,011 tokens</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- How to combine -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">How to Combine Them</h2>
+                    <div class="grid gap-4">
+                        <div class="rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200 p-4">
+                            <h3 class="font-semibold text-white dark:text-white text-gray-900 mb-2">1. Compress the prompt with AXON</h3>
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 mb-3">Use the AXON translator (VS Code extension, REPL, or WASM) to convert your natural language prompt to compact notation before sending it to the model.</p>
+                            <div class="rounded-lg bg-gray-900 dark:bg-gray-900 bg-gray-100 p-3 font-mono text-sm">
+                                <div class="text-gray-500">Input:</div>
+                                <div class="text-gray-300">explain database connection pooling</div>
+                                <div class="text-axon-output mt-1">&rarr; >explain db-conn-pooling</div>
+                            </div>
+                        </div>
+                        <div class="rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200 p-4">
+                            <h3 class="font-semibold text-white dark:text-white text-gray-900 mb-2">2. Compress the response with Caveman</h3>
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 mb-3">Add the Caveman system prompt to instruct the model to respond concisely. The model understands AXON input and responds in terse, information-dense style.</p>
+                            <div class="rounded-lg bg-gray-900 dark:bg-gray-900 bg-gray-100 p-3 font-mono text-sm">
+                                <div class="text-gray-500">System prompt:</div>
+                                <div class="text-amber-400">respond like caveman. short sentence. no fluff.</div>
+                            </div>
+                        </div>
+                        <div class="rounded-lg border border-axon-accent/30 bg-axon-accent/5 p-4">
+                            <h3 class="font-semibold text-axon-accent mb-2">3. Result: 46.9% total savings</h3>
+                            <p class="text-sm text-gray-300 dark:text-gray-300 text-gray-700">AXON handles the input, Caveman handles the output. No overlap, no quality loss, nearly half the token cost.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Methodology -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Methodology</h2>
+                    <div class="rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200 p-4">
+                        <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 leading-relaxed">Data sourced from the <a href="https://github.com/JuliusBrussee/caveman" target="_blank" class="text-axon-accent hover:underline">Caveman evaluation suite</a>. 10 technical programming questions tested across 6 arms (baseline, terse, caveman, caveman-cn, caveman-es, compress) using Claude Opus 4.6. Token counts estimated using BPE-aware heuristics (whitespace-split + non-alphanumeric character counting). AXON translations performed by the Rust rule-based engine at L0 abbreviation level. Full test suite available in the <a href="https://github.com/colwill/axon" target="_blank" class="text-axon-accent hover:underline">AXON repository</a> at <span class="font-mono text-axon-output">lib/tests/caveman_comparison.rs</span>.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══ REPL ═══ -->
+            <section x-show="section === 'repl'" x-transition class="fade-in">
+                <h1 class="text-3xl font-bold text-white dark:text-white text-gray-900 mb-2">AXON REPL</h1>
+                <p class="text-gray-400 dark:text-gray-400 text-gray-600 mb-8 text-lg">An interactive command-line translator for AXON notation. Convert between natural language and AXON in your terminal.</p>
+
+                <!-- Install -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Install</h2>
+                    <div class="rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200 bg-axon-surface dark:bg-axon-surface bg-gray-50 overflow-hidden">
+                        <div class="p-5">
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 mb-4">Clone the repository and build with Cargo:</p>
+                            <div class="space-y-3">
+                                <div class="rounded-lg bg-gray-900 dark:bg-gray-900 bg-gray-100 p-4 font-mono text-sm text-axon-output flex items-center justify-between">
+                                    <span>git clone https://github.com/colwill/axon.git</span>
+                                    <button @click="copyText('git clone https://github.com/colwill/axon.git')" class="ml-3 text-xs px-2 py-1 rounded bg-axon-accent/15 text-axon-accent hover:bg-axon-accent/25 transition shrink-0">Copy</button>
+                                </div>
+                                <div class="rounded-lg bg-gray-900 dark:bg-gray-900 bg-gray-100 p-4 font-mono text-sm text-axon-output flex items-center justify-between">
+                                    <span>cd axon && cargo build --release -p axon-repl</span>
+                                    <button @click="copyText('cd axon && cargo build --release -p axon-repl')" class="ml-3 text-xs px-2 py-1 rounded bg-axon-accent/15 text-axon-accent hover:bg-axon-accent/25 transition shrink-0">Copy</button>
+                                </div>
+                            </div>
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 mt-4">The binary will be at <span class="font-mono text-axon-output">target/release/axon-repl</span>. You can copy it to a directory on your PATH:</p>
+                            <div class="rounded-lg bg-gray-900 dark:bg-gray-900 bg-gray-100 p-4 font-mono text-sm text-axon-output mt-3 flex items-center justify-between">
+                                <span>cp target/release/axon-repl ~/.local/bin/</span>
+                                <button @click="copyText('cp target/release/axon-repl ~/.local/bin/')" class="ml-3 text-xs px-2 py-1 rounded bg-axon-accent/15 text-axon-accent hover:bg-axon-accent/25 transition shrink-0">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Usage -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Usage</h2>
+                    <div class="grid gap-4">
+                        <div class="rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200 p-4">
+                            <h3 class="font-semibold text-white dark:text-white text-gray-900 mb-2">Interactive Mode</h3>
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 mb-3">Launch the REPL and type expressions interactively:</p>
+                            <div class="rounded-lg bg-gray-900 dark:bg-gray-900 bg-gray-100 p-4 font-mono text-sm leading-relaxed">
+                                <div class="text-gray-500">$</div>
+                                <div class="text-axon-output">axon-repl</div>
+                                <div class="text-gray-500 mt-2">axon&gt;</div>
+                                <div class="text-gray-300">fix the bug in the auth service</div>
+                                <div class="text-axon-positive mt-1">&rarr; >fix bug:auth-service</div>
+                                <div class="text-gray-500 mt-2">axon&gt;</div>
+                                <div class="text-gray-300">what is the best way to cache data</div>
+                                <div class="text-axon-positive mt-1">&rarr; ?best cache-data</div>
+                            </div>
+                        </div>
+                        <div class="rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200 p-4">
+                            <h3 class="font-semibold text-white dark:text-white text-gray-900 mb-2">Pipe Mode</h3>
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 mb-3">Pipe text into the REPL for batch translation or scripting:</p>
+                            <div class="rounded-lg bg-gray-900 dark:bg-gray-900 bg-gray-100 p-4 font-mono text-sm text-axon-output flex items-center justify-between">
+                                <span>echo "add a field email to User" | axon-repl</span>
+                                <button @click="copyText('echo &quot;add a field email to User&quot; | axon-repl')" class="ml-3 text-xs px-2 py-1 rounded bg-axon-accent/15 text-axon-accent hover:bg-axon-accent/25 transition shrink-0">Copy</button>
+                            </div>
+                        </div>
+                        <div class="rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200 p-4">
+                            <h3 class="font-semibold text-white dark:text-white text-gray-900 mb-2">JSON Output</h3>
+                            <p class="text-sm text-gray-400 dark:text-gray-400 text-gray-600 mb-3">Get structured JSON output for integration with other tools:</p>
+                            <div class="rounded-lg bg-gray-900 dark:bg-gray-900 bg-gray-100 p-4 font-mono text-sm text-axon-output flex items-center justify-between">
+                                <span>echo "fix the login bug" | axon-repl --json</span>
+                                <button @click="copyText('echo &quot;fix the login bug&quot; | axon-repl --json')" class="ml-3 text-xs px-2 py-1 rounded bg-axon-accent/15 text-axon-accent hover:bg-axon-accent/25 transition shrink-0">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Features -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Features</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="text-center p-4 rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200">
+                            <div class="text-lg font-bold text-white dark:text-white text-gray-900 mb-1">Bidirectional</div>
+                            <div class="text-xs text-gray-500">Translate text to AXON and AXON back to text</div>
+                        </div>
+                        <div class="text-center p-4 rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200">
+                            <div class="text-lg font-bold text-white dark:text-white text-gray-900 mb-1">Offline</div>
+                            <div class="text-xs text-gray-500">Uses a local lookup table — no network needed</div>
+                        </div>
+                        <div class="text-center p-4 rounded-xl border border-gray-800 dark:border-gray-800 border-gray-200">
+                            <div class="text-lg font-bold text-white dark:text-white text-gray-900 mb-1">Pipeable</div>
+                            <div class="text-xs text-gray-500">Works with stdin/stdout for scripting and agents</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Requirements -->
+                <div class="mb-10">
+                    <h2 class="text-xl font-semibold text-white dark:text-white text-gray-900 mb-4">Requirements</h2>
+                    <div class="overflow-x-auto rounded-lg border border-gray-800 dark:border-gray-800 border-gray-200">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-900 dark:bg-gray-900 bg-gray-100">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Dependency</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Version</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-800 dark:divide-gray-800 divide-gray-200">
+                                <tr><td class="px-4 py-2 font-mono text-axon-output">Rust</td><td class="px-4 py-2">2021 edition or later</td></tr>
+                                <tr><td class="px-4 py-2 font-mono text-axon-output">Cargo</td><td class="px-4 py-2">Included with Rust</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Toast (global) -->
+    <div x-show="showToast" x-transition class="fixed bottom-6 right-6 px-4 py-2 rounded-lg bg-axon-positive/90 text-white text-sm font-medium toast z-50">
+        Copied to clipboard
+    </div>
+
+    <!-- WASM + Alpine -->
+    <script type="module">
+    let wasmTranslator = null;
+    let wasmEstimate = null;
+
+    try {
+        const mod = await import('./pkg/axon.js');
+        await mod.default();
+        wasmTranslator = new mod.AxonTranslator();
+        document.dispatchEvent(new CustomEvent('wasm-ready'));
+    } catch (e) {
+        console.warn('WASM load failed:', e);
+        document.dispatchEvent(new CustomEvent('wasm-failed'));
+    }
+
+    window.getTranslator = () => wasmTranslator;
+    </script>
+
+    <script>
+    function app() {
+        return {
+            section: 'playground',
+            sidebarOpen: false,
+            dark: true,
+            input: '',
+            output: null,
+            loading: true,
+            showToast: false,
+
+            quickExamples: [
+                'fix the bug in the authentication service',
+                'what is the best way to implement caching',
+                'create documentation for the login component in the auth service',
+                'The sun probably emits ultraviolet radiation',
+                'Climate change is caused by CO2 emissions',
+                'add a field email to the User struct',
+                'All organisms require energy to survive',
+                'New object ref each render. Inline object prop = new ref',
+            ],
+
+            activeTier: 0,
+            abbrevTiers: [
+                { level: 0, name: 'Default', desc: 'L0: 85+ standard developer terms — universally understood.',
+                  entries: [
+                    ['object','obj'], ['function','fn'], ['component','comp'], ['documentation','docs'],
+                    ['implementation','impl'], ['authentication','auth'], ['application','app'],
+                    ['configuration','cfg'], ['environment','env'], ['database','db'],
+                    ['parameter','param'], ['reference','ref'], ['performance','perf'],
+                    ['property','prop'], ['render','rnd'], ['inline','inl'],
+                    ['variable','var'], ['constant','const'], ['directory','dir'],
+                    ['dependency','dep'], ['message','msg'], ['request','req'],
+                    ['response','res'], ['middleware','mw'], ['information','info'],
+                    ['expression','expr'], ['condition','cond'], ['temporary','tmp'],
+                    ['maximum','max'], ['minimum','min'], ['number','num'],
+                    ['string','str'], ['boolean','bool'], ['integer','int'],
+                    ['notification','notif'], ['operation','op'], ['administrator','admin'],
+                    ['source','src'], ['destination','dest'], ['description','desc'],
+                    ['transaction','txn'], ['memory','mem'], ['connection','conn'],
+                    ['certificate','cert'], ['management','mgmt'], ['callback','cb'],
+                ]},
+                { level: 1, name: 'Extended', desc: 'L1: +90 networking, OS, data, DevOps, and general dev terms.',
+                  entries: [
+                    ['protocol','proto'], ['address','addr'], ['network','net'],
+                    ['socket','sock'], ['bandwidth','bw'], ['latency','lat'],
+                    ['throughput','tput'], ['packet','pkt'], ['process','proc'],
+                    ['thread','thd'], ['scheduler','sched'], ['filesystem','fs'],
+                    ['allocation','alloc'], ['register','reg'], ['permission','perm'],
+                    ['collection','coll'], ['element','elem'], ['index','idx'],
+                    ['length','len'], ['count','cnt'], ['buffer','buf'],
+                    ['sequence','seq'], ['frequency','freq'], ['column','col'],
+                    ['record','rec'], ['aggregate','agg'], ['accumulator','acc'],
+                    ['container','ctr'], ['kubernetes','k8s'], ['namespace','ns'],
+                    ['instance','inst'], ['deployment','deploy'], ['monitoring','mon'],
+                    ['endpoint','ep'], ['controller','ctrl'], ['serialization','ser'],
+                    ['validation','val'], ['constructor','ctor'], ['destructor','dtor'],
+                    ['exception','exc'], ['library','lib'], ['package','pkg'],
+                    ['interface','iface'], ['algorithm','algo'], ['architecture','arch'],
+                    ['version','ver'], ['extension','ext'], ['definition','def'],
+                    ['declaration','decl'], ['statement','stmt'], ['utility','util'],
+                    ['debug','dbg'], ['benchmark','bench'], ['migration','migr'],
+                    ['integration','integ'], ['refactoring','refac'],
+                ]},
+                { level: 2, name: 'Aggressive', desc: 'L2: +50 common English words shortened for maximum compression.',
+                  entries: [
+                    ['between','btw'], ['without','w/o'], ['because','bc'],
+                    ['example','ex'], ['different','diff'], ['difference','diff'],
+                    ['important','imp'], ['multiple','mult'], ['available','avail'],
+                    ['required','reqd'], ['optional','opt'], ['alternative','alt'],
+                    ['comparison','cmp'], ['approximately','approx'], ['especially','esp'],
+                    ['including','incl'], ['regarding','re'], ['typically','typ'],
+                    ['specific','spec'], ['generally','gen'], ['additional','addl'],
+                    ['automatic','auto'], ['independent','indep'], ['separate','sep'],
+                    ['immediately','immed'], ['distributed','distrib'], ['concurrent','concur'],
+                    ['horizontal','horiz'], ['vertical','vert'], ['duplicate','dup'],
+                    ['strategy','strat'], ['mechanism','mech'],
+                ]},
+                { level: 3, name: 'Maximum', desc: 'L3: Single-char and extreme shortenings for expert users. Overrides lower tiers.',
+                  entries: [
+                    ['function','f'], ['variable','v'], ['object','o'],
+                    ['string','s'], ['number','n'], ['integer','i'],
+                    ['boolean','b'], ['return','ret'], ['value','val'],
+                    ['error','err'], ['result','res'], ['context','ctx'],
+                    ['message','m'], ['data','d'], ['type','t'],
+                    ['event','evt'], ['handler','h'], ['service','svc'],
+                    ['server','srv'], ['client','cli'], ['command','cmd'],
+                    ['channel','ch'], ['signal','sig'], ['method','m'],
+                    ['module','mod'], ['resource','rsc'], ['identifier','id'],
+                    ['manager','mgr'], ['factory','fac'], ['provider','prov'],
+                    ['consumer','cons'], ['producer','prod'], ['subscriber','sub'],
+                    ['publisher','pub'], ['listener','lsnr'], ['observer','obs'],
+                ]},
+            ],
+
+            commands: ['doc','impl','fix','test','rev','ref','opt','plan','dep','add','rm','up','mv','cfg','mig','db','api','ci','sec','err','log','bench','lint','merge','explain'],
+            queries: ['how','why','best','what','diff','when','where','can','cmp','alt','err','perf'],
+
+            cavemanData: [
+                { prompt: 'Why does my React component re-render every time the parent updates?', axon: '38.5', caveman: '53.2', compress: '-4.7' },
+                { prompt: 'Explain database connection pooling.', axon: '0.0', caveman: '87.8', compress: '33.0' },
+                { prompt: "What's the difference between TCP and UDP?", axon: '44.4', caveman: '41.8', compress: '59.2' },
+                { prompt: 'How do I fix a memory leak in a long-running Node.js process?', axon: '33.3', caveman: '2.3', compress: '-7.6' },
+                { prompt: 'What does the SQL EXPLAIN command tell me?', axon: '33.3', caveman: '35.1', compress: '32.2' },
+                { prompt: 'How does a hash table handle collisions?', axon: '25.0', caveman: '44.9', compress: '26.5' },
+                { prompt: 'Why am I getting CORS errors in my browser console?', axon: '45.5', caveman: '42.3', compress: '-9.3' },
+                { prompt: "What's the point of using a debouncer on a search input?", axon: '46.2', caveman: '65.7', compress: '-17.1' },
+                { prompt: 'How does git rebase differ from git merge?', axon: '11.1', caveman: '44.7', compress: '58.8' },
+                { prompt: 'When should I use a queue vs a topic in messaging systems?', axon: '46.2', caveman: '48.3', compress: '14.5' },
+            ],
+
+            exampleCategories: [
+                { name: 'General NLP', items: [
+                    { input: 'The sun probably emits ultraviolet radiation', axon: '@sun ~emit* #ultraviolet #radiation' },
+                    { input: 'Climate change is caused by CO2 emissions', axon: '#climate-change <- @co2 #emission' },
+                    { input: 'All organisms require energy to survive', axon: 'A.@organism ~require #energy #survival' },
+                    { input: 'There is no evidence that this treatment works', axon: '!#evidence :. !~work #treatment' },
+                    { input: 'The economy is growing but inflation is rising', axon: '#economy ~grow && #inflation ~rise' },
+                    { input: 'Gravity causes objects to fall', axon: '#gravity -> obj ~fall' },
+                ]},
+                { name: 'Programming Commands', items: [
+                    { input: 'create documentation for the login component in the auth service', axon: '>doc login-comp:auth-service' },
+                    { input: 'fix the bug in the payment processing module', axon: '>fix bug:payment-processing-module' },
+                    { input: 'implement user authentication', axon: '>impl user-auth' },
+                    { input: 'write tests for the user registration flow', axon: '>test user-registration-flow' },
+                    { input: 'refactor the code in the API handler', axon: '>ref code:api-handler' },
+                    { input: 'migrate the codebase from javascript to typescript', axon: '>mig codebase->typescript' },
+                ]},
+                { name: 'Programming Queries', items: [
+                    { input: 'what is the best way to implement caching', axon: '?best impl-caching' },
+                    { input: 'how do i implement authentication in my react app', axon: '?how impl-auth:react-app' },
+                    { input: 'what is the difference between REST and GraphQL', axon: '?diff rest&&graphql' },
+                    { input: 'explain database connection pooling', axon: '>explain db-conn-pooling' },
+                    { input: 'why is the search slow', axon: '?perf search' },
+                ]},
+                { name: 'Structural Operations', items: [
+                    { input: 'add a field email to the User struct', axon: '@user+.email' },
+                    { input: 'remove the field status from the Order', axon: '@order-.status' },
+                    { input: 'implement the Serializable interface on the User struct', axon: '@user:impl(@serializable)' },
+                    { input: 'rename the field name to fullName on the User struct', axon: '@user.name->.fullName' },
+                    { input: 'add an import for React', axon: '+use(react)' },
+                ]},
+            ],
+
+            init() {
+                // Theme
+                const saved = localStorage.getItem('axon-theme');
+                this.dark = saved ? saved === 'dark' : true;
+                this.applyTheme();
+
+                // WASM ready listener
+                document.addEventListener('wasm-ready', () => { this.loading = false; });
+                document.addEventListener('wasm-failed', () => { this.loading = false; });
+                // In case WASM loaded before Alpine init
+                if (window.getTranslator && window.getTranslator()) this.loading = false;
+            },
+
+            go(s) {
+                this.section = s;
+                this.sidebarOpen = false;
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            },
+
+            toggleTheme() {
+                this.dark = !this.dark;
+                localStorage.setItem('axon-theme', this.dark ? 'dark' : 'light');
+                this.applyTheme();
+            },
+
+            applyTheme() {
+                document.documentElement.classList.toggle('dark', this.dark);
+                document.documentElement.classList.toggle('light', !this.dark);
+            },
+
+            translate() {
+                const t = window.getTranslator ? window.getTranslator() : null;
+                if (!t || !this.input.trim()) return;
+                const result = t.translate(this.input.trim());
+                this.output = {
+                    inputText: this.input.trim(),
+                    axon: result.axon,
+                    annotation: result.annotation,
+                    savings: result.savings,
+                    inputTokens: this.estimateTokens(this.input.trim()),
+                    axonTokens: this.estimateTokens(result.axon),
+                };
+                result.free();
+            },
+
+            estimateTokens(text) {
+                let count = 0;
+                for (const word of text.split(/\s+/).filter(Boolean)) {
+                    count++;
+                    for (const ch of word) {
+                        if (!/[a-zA-Z0-9]/.test(ch)) count++;
+                    }
+                }
+                return Math.max(count, 1);
+            },
+
+            setExample(text) {
+                this.input = text;
+                this.translate();
+            },
+
+            async copyText(text) {
+                await navigator.clipboard.writeText(text);
+                this.showToast = true;
+                setTimeout(() => { this.showToast = false; }, 2000);
+            },
+
+            async copyPrompt() {
+                const text = this.$refs.promptText.textContent;
+                await this.copyText(text);
+            },
+        };
+    }
+    </script>
+
+</body>
+</html>

@@ -1,10 +1,19 @@
-.PHONY: build serve build-vscode rebuild-vscode package-vscode install-vscode
+.PHONY: build serve serve-playground build-repl run-repl build-vscode rebuild-vscode package-vscode install-vscode
 
 build:
-	wasm-pack build --target web --out-dir web/pkg
+	wasm-pack build --target web --out-dir playground/pkg
+
+build-repl:
+	cargo build --release -p axon-frontend
+
+run-repl:
+	cargo run -p axon-frontend
 
 serve: build
-	python3 -m http.server 3000 --directory web
+	python3 -m http.server 3001 --directory playground
+
+serve-playground: build
+	python3 -m http.server 3002
 
 build-vscode:
 	wasm-pack build --target nodejs --out-dir vscode-extension/wasm

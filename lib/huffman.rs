@@ -1,14 +1,13 @@
-/// huffman.rs — Huffman encoding for AXON prompt compression
-///
-/// Encodes the AXON specification into a compact binary representation using
-/// Huffman coding. The encoded output is base64-encoded for safe embedding
-/// in text prompts. A decode table is prepended so the LLM can reconstruct
-/// the original text during its thinking phase.
+// huffman.rs — Huffman encoding for AXON prompt compression
+//
+// Encodes the AXON specification into a compact binary representation using
+// Huffman coding. The encoded output is base64-encoded for safe embedding
+// in text prompts. A decode table is prepended so the LLM can reconstruct
+// the original text during its thinking phase.
 
 use std::collections::{BinaryHeap, HashMap};
 use std::cmp::Ordering;
 
-// ─── Huffman tree ────────────────────────────────────────────────────────────
 
 #[derive(Debug, Eq, PartialEq)]
 enum Node {
@@ -36,8 +35,6 @@ impl PartialOrd for Node {
         Some(self.cmp(other))
     }
 }
-
-// ─── Build tree ──────────────────────────────────────────────────────────────
 
 fn build_tree(text: &str) -> Option<Node> {
     let mut freq: HashMap<char, u32> = HashMap::new();
@@ -72,8 +69,6 @@ fn build_tree(text: &str) -> Option<Node> {
     heap.pop()
 }
 
-// ─── Build code table ────────────────────────────────────────────────────────
-
 fn build_codes(node: &Node, prefix: &str, codes: &mut HashMap<char, String>) {
     match node {
         Node::Leaf { ch, .. } => {
@@ -85,8 +80,6 @@ fn build_codes(node: &Node, prefix: &str, codes: &mut HashMap<char, String>) {
         }
     }
 }
-
-// ─── Encode ──────────────────────────────────────────────────────────────────
 
 fn encode_bits(text: &str, codes: &HashMap<char, String>) -> Vec<u8> {
     let mut bits = String::new();
@@ -119,8 +112,7 @@ fn encode_bits(text: &str, codes: &HashMap<char, String>) -> Vec<u8> {
     result
 }
 
-// ─── Base64 ──────────────────────────────────────────────────────────────────
-
+// Based
 const B64_CHARS: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 fn base64_encode(data: &[u8]) -> String {
@@ -147,11 +139,9 @@ fn base64_encode(data: &[u8]) -> String {
     result
 }
 
-// ─── Serialise code table ────────────────────────────────────────────────────
-
-/// Serialise the Huffman code table in a compact format:
-/// Each entry: char=bitstring, separated by semicolons.
-/// Special chars are escaped: \n → \\n, \t → \\t, space → \\s, ; → \\;, = → \\=
+// Serialise the Huffman code table in a compact format:
+// Each entry: char=bitstring, separated by semicolons.
+// Special chars are escaped: \n → \\n, \t → \\t, space → \\s, ; → \\;, = → \\=
 fn serialise_table(codes: &HashMap<char, String>) -> String {
     let mut entries: Vec<(&char, &String)> = codes.iter().collect();
     entries.sort_by_key(|(_, code)| code.len());
@@ -173,8 +163,6 @@ fn serialise_table(codes: &HashMap<char, String>) -> String {
     parts.join(";")
 }
 
-// ─── Public API ──────────────────────────────────────────────────────────────
-
 pub struct CompressedPrompt {
     pub encoded: String,
     pub original_bytes: usize,
@@ -182,7 +170,8 @@ pub struct CompressedPrompt {
     pub ratio: f64,
 }
 
-/// Compress the AXON spec into a Huffman-encoded prompt with decode instructions.
+// Compress the AXON spec into a Huffman-encoded prompt with decode instructions.
+// Useful only for large input...
 pub fn compress_prompt(text: &str) -> CompressedPrompt {
     let tree = build_tree(text).expect("empty input");
     let mut codes = HashMap::new();
@@ -251,7 +240,7 @@ mod tests {
 
     #[test]
     fn test_compress_prompt() {
-        let spec = "AXON v2.0 spec test content with @entity #concept ~process";
+        let spec = "AXON v1.0 spec test content with @entity #concept ~process";
         let result = compress_prompt(spec);
         assert!(!result.encoded.is_empty());
         assert!(result.encoded.contains("HUFFMAN-ENCODED"));

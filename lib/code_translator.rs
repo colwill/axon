@@ -1,23 +1,23 @@
-/// code_translator.rs — AXON programming query & structural operation translator
+// code_translator.rs — AXON programming query & structural operation translator
 ///
-/// Handles the programming subset of the unified AXON notation: command verbs,
-/// query types, structural code operations (field/method/type modifications),
-/// and import/inheritance operators.
+// Handles the programming subset of the unified AXON notation: command verbs,
+// query types, structural code operations (field/method/type modifications),
+// and import/inheritance operators.
 ///
-/// Syntax (part of AXON v2.0):
-///   Commands:    >verb subject[:scope]
-///   Queries:     ?type subject[:scope]
-///   Transform:   subject→target
-///   Structural:  @Type+.field  @Type.field=$val  @Type:impl(@Trait)
-///   Import:      +use(module)  -use(module)
+// Syntax (part of AXON v1.0):
+//  Commands:    >verb subject[:scope]
+//  Queries:     ?type subject[:scope]
+//  Transform:   subject->target
+//  Structural:  @Type+.field  @Type.field=$val  @Type:impl(@Trait)
+//  Import:      +use(module)  -use(module)
 
-// ─── Action trigger table ────────────────────────────────────────────────────
+// Action trigger table 
 //
 // Each entry: (&[trigger phrases], axon_verb)
 // Ordered longest-first within each group so greedy prefix match works.
 
 const ACTION_PATTERNS: &[(&[&str], &str)] = &[
-    // ── Documentation ────────────────────────────────────────────────────────
+    // Documentation 
     (&[
         "create documentation for",
         "write documentation for",
@@ -33,7 +33,7 @@ const ACTION_PATTERNS: &[(&[&str], &str)] = &[
         "document",
     ], "doc"),
 
-    // ── Implementation ───────────────────────────────────────────────────────
+    // Implementation
     (&[
         "implement the feature",
         "implement a new",
@@ -61,7 +61,7 @@ const ACTION_PATTERNS: &[(&[&str], &str)] = &[
         "wire up",
     ], "impl"),
 
-    // ── Bug fixing ───────────────────────────────────────────────────────────
+    // Bug fixing
     (&[
         "fix the bug in",
         "fix the bug with",
@@ -89,7 +89,7 @@ const ACTION_PATTERNS: &[(&[&str], &str)] = &[
         "hotfix",
     ], "fix"),
 
-    // ── Testing ──────────────────────────────────────────────────────────────
+    // Testing 
     (&[
         "write unit tests for",
         "write integration tests for",
@@ -107,7 +107,7 @@ const ACTION_PATTERNS: &[(&[&str], &str)] = &[
         "test",
     ], "test"),
 
-    // ── Code review ──────────────────────────────────────────────────────────
+    // Code review 
     (&[
         "review the code in",
         "review the code for",
@@ -123,7 +123,7 @@ const ACTION_PATTERNS: &[(&[&str], &str)] = &[
         "check the code of",
     ], "rev"),
 
-    // ── Refactoring ──────────────────────────────────────────────────────────
+    // Refactoring 
     (&[
         "refactor the code in",
         "refactor the code for",
@@ -143,7 +143,7 @@ const ACTION_PATTERNS: &[(&[&str], &str)] = &[
         "simplify",
     ], "ref"),
 
-    // ── Optimization ─────────────────────────────────────────────────────────
+    // Optimization
     (&[
         "optimize the performance of",
         "optimise the performance of",
@@ -164,7 +164,7 @@ const ACTION_PATTERNS: &[(&[&str], &str)] = &[
         "reduce memory usage of",
     ], "opt"),
 
-    // ── Planning / Design ────────────────────────────────────────────────────
+    // Planning / Design 
     (&[
         "plan the following feature",
         "plan the implementation of",
@@ -189,7 +189,7 @@ const ACTION_PATTERNS: &[(&[&str], &str)] = &[
         "draft a plan to",
     ], "plan"),
 
-    // ── Deployment ───────────────────────────────────────────────────────────
+    // Deployment
     (&[
         "deploy the application to",
         "deploy the app to",
@@ -211,7 +211,7 @@ const ACTION_PATTERNS: &[(&[&str], &str)] = &[
         "publish",
     ], "dep"),
 
-    // ── Add ──────────────────────────────────────────────────────────────────
+    // Add 
     (&[
         "add a new feature for",
         "add a new feature to",
@@ -236,7 +236,7 @@ const ACTION_PATTERNS: &[(&[&str], &str)] = &[
         "introduce",
     ], "add"),
 
-    // ── Remove ───────────────────────────────────────────────────────────────
+    // Remove
     (&[
         "remove the dependency on",
         "remove the",
@@ -254,7 +254,7 @@ const ACTION_PATTERNS: &[(&[&str], &str)] = &[
         "deprecate",
     ], "rm"),
 
-    // ── Update / Upgrade ─────────────────────────────────────────────────────
+    // Update / Upgrade
     (&[
         "update the version of",
         "update the dependency",
@@ -272,7 +272,7 @@ const ACTION_PATTERNS: &[(&[&str], &str)] = &[
         "bump",
     ], "up"),
 
-    // ── Rename / Move ────────────────────────────────────────────────────────
+    // Rename / Move 
     (&[
         "rename the file",
         "rename the function",
@@ -288,7 +288,7 @@ const ACTION_PATTERNS: &[(&[&str], &str)] = &[
         "move",
     ], "mv"),
 
-    // ── Configure / Setup ────────────────────────────────────────────────────
+    // Configure / Setup 
     (&[
         "configure the settings for",
         "configure the",
@@ -309,7 +309,7 @@ const ACTION_PATTERNS: &[(&[&str], &str)] = &[
         "bootstrap",
     ], "cfg"),
 
-    // ── Migrate ──────────────────────────────────────────────────────────────
+    // Migrate 
     (&[
         "migrate the database",
         "migrate the data from",
@@ -333,7 +333,7 @@ const ACTION_PATTERNS: &[(&[&str], &str)] = &[
         "convert",
     ], "mig"),
 
-    // ── Benchmark / Profile ──────────────────────────────────────────────────
+    // Benchmark / Profile 
     (&[
         "benchmark the performance of",
         "benchmark the",
@@ -350,7 +350,7 @@ const ACTION_PATTERNS: &[(&[&str], &str)] = &[
         "stress test",
     ], "bench"),
 
-    // ── Lint / Format ────────────────────────────────────────────────────────
+    // Lint / Format 
     (&[
         "lint the code in",
         "lint the",
@@ -366,7 +366,7 @@ const ACTION_PATTERNS: &[(&[&str], &str)] = &[
         "run formatter",
     ], "lint"),
 
-    // ── Logging ──────────────────────────────────────────────────────────────
+    // Logging 
     (&[
         "add logging to the",
         "add logging to",
@@ -395,7 +395,7 @@ const ACTION_PATTERNS: &[(&[&str], &str)] = &[
         "instrument",
     ], "log"),
 
-    // ── Security ─────────────────────────────────────────────────────────────
+    // Security
     (&[
         "audit the security of",
         "audit the security for",
@@ -416,7 +416,7 @@ const ACTION_PATTERNS: &[(&[&str], &str)] = &[
         "scan for vulnerabilities",
     ], "sec"),
 
-    // ── Merge ────────────────────────────────────────────────────────────────
+    // Merge 
     (&[
         "merge the branch into",
         "merge the branch",
@@ -434,7 +434,7 @@ const ACTION_PATTERNS: &[(&[&str], &str)] = &[
         "rebase and merge",
     ], "merge"),
 
-    // ── Type annotations ─────────────────────────────────────────────────────
+    // Type annotations
     (&[
         "add type annotations to the",
         "add type annotations to",
@@ -455,7 +455,7 @@ const ACTION_PATTERNS: &[(&[&str], &str)] = &[
         "add typing",
     ], "type"),
 
-    // ── Database ─────────────────────────────────────────────────────────────
+    // Database
     (&[
         "create a database migration for",
         "create a database migration",
@@ -478,7 +478,7 @@ const ACTION_PATTERNS: &[(&[&str], &str)] = &[
         "update the schema",
     ], "db"),
 
-    // ── API ──────────────────────────────────────────────────────────────────
+    // API 
     (&[
         "create an api endpoint for",
         "create an endpoint for",
@@ -493,7 +493,7 @@ const ACTION_PATTERNS: &[(&[&str], &str)] = &[
         "add a graphql mutation for",
     ], "api"),
 
-    // ── CI/CD ────────────────────────────────────────────────────────────────
+    // CI/CD 
     (&[
         "set up ci cd for the",
         "set up ci cd for",
@@ -529,7 +529,7 @@ const ACTION_PATTERNS: &[(&[&str], &str)] = &[
         "create a github action for",
     ], "ci"),
 
-    // ── Error handling ───────────────────────────────────────────────────────
+    // Error handling
     (&[
         "add error handling to the",
         "add error handling to",
@@ -563,7 +563,7 @@ const ACTION_PATTERNS: &[(&[&str], &str)] = &[
         "validate the input",
     ], "err"),
 
-    // ── Explain (treated as action since it's a command) ─────────────────────
+    // Explain (treated as action since it's a command)
     (&[
         "explain how the",
         "explain how to",
@@ -587,10 +587,10 @@ const ACTION_PATTERNS: &[(&[&str], &str)] = &[
     ], "explain"),
 ];
 
-// ─── Query trigger table ─────────────────────────────────────────────────────
+// Query trigger table
 
 const QUERY_PATTERNS: &[(&[&str], &str)] = &[
-    // ── How ──────────────────────────────────────────────────────────────────
+    // How 
     (&[
         "how do i go about",
         "how do i properly",
@@ -623,7 +623,7 @@ const QUERY_PATTERNS: &[(&[&str], &str)] = &[
         "what are the steps to",
     ], "how"),
 
-    // ── Why ──────────────────────────────────────────────────────────────────
+    // Why 
     (&[
         "why does the",
         "why does my",
@@ -664,7 +664,7 @@ const QUERY_PATTERNS: &[(&[&str], &str)] = &[
         "why should we",
     ], "why"),
 
-    // ── Best practice ────────────────────────────────────────────────────────
+    // Best practice 
     (&[
         "what is the best approach to",
         "what is the best way to",
@@ -695,7 +695,7 @@ const QUERY_PATTERNS: &[(&[&str], &str)] = &[
         "idiomatic way to",
     ], "best"),
 
-    // ── Difference / Compare ─────────────────────────────────────────────────
+    // Difference / Compare
     (&[
         "what is the difference between",
         "what's the difference between",
@@ -707,7 +707,7 @@ const QUERY_PATTERNS: &[(&[&str], &str)] = &[
         "how is it different from",
     ], "diff"),
 
-    // ── What ─────────────────────────────────────────────────────────────────
+    // What
     (&[
         "what is a",
         "what is an",
@@ -726,7 +726,7 @@ const QUERY_PATTERNS: &[(&[&str], &str)] = &[
         "what do",
     ], "what"),
 
-    // ── When ─────────────────────────────────────────────────────────────────
+    // When
     (&[
         "when should i use a",
         "when should i use",
@@ -741,7 +741,7 @@ const QUERY_PATTERNS: &[(&[&str], &str)] = &[
         "when would you use",
     ], "when"),
 
-    // ── Where ────────────────────────────────────────────────────────────────
+    // Where 
     (&[
         "where is the code for",
         "where is the file for",
@@ -768,7 +768,7 @@ const QUERY_PATTERNS: &[(&[&str], &str)] = &[
         "locate",
     ], "where"),
 
-    // ── Can / Possible ───────────────────────────────────────────────────────
+    // Can / Possible
     (&[
         "is it possible to",
         "is there a way to",
@@ -782,7 +782,7 @@ const QUERY_PATTERNS: &[(&[&str], &str)] = &[
         "does it support",
     ], "can"),
 
-    // ── Compare ──────────────────────────────────────────────────────────────
+    // Compare 
     (&[
         "which is better for",
         "which is better",
@@ -802,7 +802,7 @@ const QUERY_PATTERNS: &[(&[&str], &str)] = &[
         "trade-offs of",
     ], "cmp"),
 
-    // ── Alternatives ─────────────────────────────────────────────────────────
+    // Alternatives
     (&[
         "what are the alternatives to",
         "what are the alternatives for",
@@ -816,7 +816,7 @@ const QUERY_PATTERNS: &[(&[&str], &str)] = &[
         "instead of",
     ], "alt"),
 
-    // ── Error explanation ────────────────────────────────────────────────────
+    // Error explanation 
     (&[
         "what does this error mean",
         "what does the error mean",
@@ -834,7 +834,7 @@ const QUERY_PATTERNS: &[(&[&str], &str)] = &[
         "how to resolve this error",
     ], "err"),
 
-    // ── Performance ──────────────────────────────────────────────────────────
+    // Performance 
     (&[
         "why is this slow",
         "why is it slow",
@@ -853,7 +853,7 @@ const QUERY_PATTERNS: &[(&[&str], &str)] = &[
     ], "perf"),
 ];
 
-// ─── Noise phrases specific to code questions ────────────────────────────────
+// Noise phrases specific to code questions 
 
 const CODE_NOISE: &[&str] = &[
     "could you please",
@@ -904,7 +904,7 @@ const CODE_NOISE: &[&str] = &[
     "good afternoon",
 ];
 
-// ─── Scope prepositions ──────────────────────────────────────────────────────
+// Scope prepositions 
 
 const SCOPE_PREPS: &[&str] = &[
     " in the ", " in my ", " in our ", " in this ", " in a ", " in an ", " in ",
@@ -916,13 +916,13 @@ const SCOPE_PREPS: &[&str] = &[
     " inside the ", " inside my ", " inside ",
 ];
 
-// ─── Transform prepositions ─────────────────────────────────────────────────
+// Transform prepositions 
 
 const TRANSFORM_PREPS: &[&str] = &[
     " to use ", " to ", " into ", " from ",
 ];
 
-// ─── Articles and filler to strip from subjects ─────────────────────────────
+// Articles and filler to strip from subjects (leading multi-word noise)
 
 const SUBJECT_NOISE: &[&str] = &[
     "the ", "a ", "an ", "my ", "our ", "this ", "that ", "these ", "those ",
@@ -930,31 +930,45 @@ const SUBJECT_NOISE: &[&str] = &[
     "entire ", "whole ", "specific ", "particular ", "given ",
 ];
 
-// ─── Structural operation tables ─────────────────────────────────────────────
+// Stop words to remove from within subject text (single tokens)
+const SUBJECT_STOP_WORDS: &[&str] = &[
+    "the", "a", "an", "my", "our", "this", "that", "these", "those",
+    "is", "are", "was", "were", "be", "been", "being",
+    "do", "does", "did", "will", "would", "should", "can", "could",
+    "have", "has", "had", "may", "might", "shall", "must",
+    "i", "me", "we", "you", "it", "its", "your", "their",
+    "every", "each", "time", "times",
+    "just", "also", "very", "really", "actually", "always", "never",
+    "still", "even", "ever", "yet", "quite", "rather",
+    "using", "used", "getting", "got", "get",
+    "am", "im",
+];
+
+// Structural operation tables
 //
 // These handle fine-grained code modifications: field/method/parameter/type
 // operations on structs, classes, functions, enums, etc.
 //
 // Output syntax:
-//   @Target.member            field reference
-//   @Target+.field            add field
-//   @Target-.field            remove field
-//   @Target.field→.newname    rename field
-//   @Target.field:Type        set field type
-//   @Target.field=$value      set field value
-//   @Target+~method           add method
-//   @Target-~method           remove method
-//   ~func+$param              add parameter
-//   ~func-$param              remove parameter
-//   ~func→:RetType            change return type
-//   @Type:impl(@Trait)        implement trait/interface
-//   @Type<@Base               extend/inherit
-//   +use(@Module)             add import
-//   -use(@Module)             remove import
-//   @Target.field+pub         change visibility
-//   @Target~method+async      add modifier
+//  @Target.member            field reference
+//  @Target+.field            add field
+//  @Target-.field            remove field
+//  @Target.field->.newname    rename field
+//  @Target.field:Type        set field type
+//  @Target.field=$value      set field value
+//  @Target+~method           add method
+//  @Target-~method           remove method
+//  ~func+$param              add parameter
+//  ~func-$param              remove parameter
+//  ~func->:RetType            change return type
+//  @Type:impl(@Trait)        implement trait/interface
+//  @Type<@Base               extend/inherit
+//  +use(@Module)             add import
+//  -use(@Module)             remove import
+//  @Target.field+pub         change visibility
+//  @Target~method+async      add modifier
 
-/// Member-type keywords → canonical label
+// Member-type keywords -> canonical label
 const MEMBER_KEYWORDS: &[(&[&str], &str)] = &[
     (&["return type", "return value"], "return"),
     (&["field", "property", "attribute", "member", "column", "key"], "field"),
@@ -968,15 +982,15 @@ const MEMBER_KEYWORDS: &[(&[&str], &str)] = &[
     (&["import", "dependency", "package", "module", "require", "use statement"], "import"),
 ];
 
-/// Target-type keywords — structural decoration stripped from type names.
-/// Only includes words that are NEVER meaningful type names on their own.
+// Target-type keywords — structural decoration stripped from type names.
+// Only includes words that are NEVER meaningful type names on their own.
 const TARGET_KEYWORDS: &[&str] = &[
     "struct", "class", "type", "enum", "object",
     "function", "method", "func", "fn", "procedure", "routine",
     "variable", "var", "let", "const", "constant",
 ];
 
-/// Visibility / modifier keywords
+// Visibility / modifier keywords
 const MODIFIERS: &[(&str, &str)] = &[
     ("public", "pub"),
     ("private", "priv"),
@@ -1012,7 +1026,7 @@ const MODIFIERS: &[(&str, &str)] = &[
     ("unsafe", "unsafe"),
 ];
 
-/// Preposition patterns that separate member from target
+// Preposition patterns that separate member from target
 const TARGET_PREPS: &[&str] = &[
     " on the ", " on my ", " on our ", " on this ", " on ",
     " in the ", " in my ", " in our ", " in this ", " in ",
@@ -1024,25 +1038,33 @@ const TARGET_PREPS: &[&str] = &[
     " inside the ", " inside ",
 ];
 
-// ─── Public types ────────────────────────────────────────────────────────────
-
 pub struct CodeResult {
     pub axon: String,
     pub annotation: String,
     pub matched: bool,
 }
 
-// ─── CodeTranslator ──────────────────────────────────────────────────────────
-
-pub struct CodeTranslator;
+pub struct CodeTranslator {
+    abbrev_table: Vec<(&'static str, &'static str)>,
+}
 
 impl CodeTranslator {
     pub fn new() -> Self {
-        Self
+        use crate::translator::{abbreviations_for_level, AbbrevLevel};
+        Self {
+            abbrev_table: abbreviations_for_level(AbbrevLevel::L0),
+        }
     }
 
-    /// Attempt to translate a programming/project question into AXON-Code.
-    /// Returns matched=false if the input does not look like a code question.
+    pub fn with_level(level: crate::translator::AbbrevLevel) -> Self {
+        use crate::translator::abbreviations_for_level;
+        Self {
+            abbrev_table: abbreviations_for_level(level),
+        }
+    }
+
+    // Attempt to translate a programming/project question into AXON-Code.
+    // Returns matched=false if the input does not look like a code question.
     pub fn translate(&self, input: &str) -> CodeResult {
         let cleaned = self.strip_noise(input);
         if cleaned.is_empty() {
@@ -1088,8 +1110,6 @@ impl CodeTranslator {
         CodeResult { axon: String::new(), annotation: String::new(), matched: false }
     }
 
-    // ── Noise stripping ──────────────────────────────────────────────────────
-
     fn strip_noise(&self, text: &str) -> String {
         let mut result = text.trim().to_string();
 
@@ -1116,9 +1136,7 @@ impl CodeTranslator {
         result.trim().to_string()
     }
 
-    // ── Pattern matching ─────────────────────────────────────────────────────
-
-    /// Find the action pattern with the longest matching trigger phrase.
+    // Find the action pattern with the longest matching trigger phrase.
     fn match_action(&self, lower: &str) -> Option<(&'static str, String)> {
         let mut best: Option<(&'static str, usize)> = None;
         for (triggers, verb) in ACTION_PATTERNS {
@@ -1134,7 +1152,7 @@ impl CodeTranslator {
         best.map(|(verb, len)| (verb, lower[len..].trim().to_string()))
     }
 
-    /// Find the query pattern with the longest matching trigger phrase.
+    // Find the query pattern with the longest matching trigger phrase.
     fn match_query(&self, lower: &str) -> Option<(&'static str, String)> {
         let mut best: Option<(&'static str, usize)> = None;
         for (triggers, qtype) in QUERY_PATTERNS {
@@ -1150,10 +1168,8 @@ impl CodeTranslator {
         best.map(|(qtype, len)| (qtype, lower[len..].trim().to_string()))
     }
 
-    // ── Structural code operations ─────────────────────────────────────────
-
-    /// Detect and translate fine-grained code operations.
-    /// e.g. "add a field called email to the User struct" → "@User+.email"
+    // Detect and translate fine-grained code operations.
+    // e.g. "add a field called email to the User struct" -> "@User+.email"
     fn match_structural(&self, lower: &str) -> Option<(String, String)> {
         // 1. Try add-member pattern
         if let Some(r) = self.match_add_member(lower) { return Some(r); }
@@ -1176,12 +1192,12 @@ impl CodeTranslator {
         None
     }
 
-    /// "add a field called email to the User struct" → "@User+.email"
-    /// "add a method validate to the Order class" → "@Order+~validate"
-    /// "add a parameter timeout to the connect function" → "~connect+$timeout"
-    /// "add a variant Pending to the Status enum" → "@Status+.Pending"
-    /// "add a constructor to the User class" → "@User+~new"
-    /// "add a getter for name on the User struct" → "@User+~get.name"
+    // "add a field called email to the User struct" -> "@User+.email"
+    // "add a method validate to the Order class" -> "@Order+~validate"
+    // "add a parameter timeout to the connect function" -> "~connect+$timeout"
+    // "add a variant Pending to the Status enum" -> "@Status+.Pending"
+    // "add a constructor to the User class" -> "@User+~new"
+    // "add a getter for name on the User struct" -> "@User+~get.name"
     fn match_add_member(&self, lower: &str) -> Option<(String, String)> {
         // Must start with "add a/an/the" or "add "
         let rest = if lower.starts_with("add a ") {
@@ -1227,7 +1243,7 @@ impl CodeTranslator {
         let axon = if target.is_empty() {
             format!("{}+{}{}", sigil, mem_sigil, member_name)
         } else if member_name.is_empty() {
-            // e.g. "add a constructor to User" → "@User+~new"
+            // e.g. "add a constructor to User" -> "@User+~new"
             let default_name = match member_type {
                 "constructor" => "new",
                 "getter" => "get",
@@ -1250,10 +1266,10 @@ impl CodeTranslator {
         Some((axon, annotation))
     }
 
-    /// "remove the field email from the User struct" → "@User-.email"
-    /// "remove the method validate from the Order class" → "@Order-~validate"
-    /// "remove the parameter timeout from the connect function" → "~connect-$timeout"
-    /// "delete the age field from User" → "@User-.age"
+    // "remove the field email from the User struct" -> "@User-.email"
+    // "remove the method validate from the Order class" -> "@Order-~validate"
+    // "remove the parameter timeout from the connect function" -> "~connect-$timeout"
+    // "delete the age field from User" -> "@User-.age"
     fn match_remove_member(&self, lower: &str) -> Option<(String, String)> {
         let rest = if lower.starts_with("remove the ") {
             &lower[11..]
@@ -1325,8 +1341,8 @@ impl CodeTranslator {
         Some((axon, annotation))
     }
 
-    /// "rename the field name to fullName on the User struct" → "@User.name→.fullName"
-    /// "rename the method process to handle in the Worker class" → "@Worker~process→~handle"
+    // "rename the field name to fullName on the User struct" -> "@User.name->.fullName"
+    // "rename the method process to handle in the Worker class" -> "@Worker~process->~handle"
     fn match_rename_member(&self, lower: &str) -> Option<(String, String)> {
         let rest = if lower.starts_with("rename the ") {
             &lower[11..]
@@ -1375,18 +1391,18 @@ impl CodeTranslator {
         };
 
         let axon = if target.is_empty() {
-            format!("{}{}{}{}", mem_sigil, old_name, "→", format!("{}{}", mem_sigil, new_name))
+            format!("{}{}{}{}", mem_sigil, old_name, "->", format!("{}{}", mem_sigil, new_name))
         } else {
-            format!("@{}{}{}{}{}{}", target, mem_sigil, old_name, "→", mem_sigil, new_name)
+            format!("@{}{}{}{}{}{}", target, mem_sigil, old_name, "->", mem_sigil, new_name)
         };
 
-        let annotation = format!("code-opt · struct(rename) · {}({}) → {}", member_type, old_name, new_name);
+        let annotation = format!("code-opt · struct(rename) · {}({}) -> {}", member_type, old_name, new_name);
         Some((axon, annotation))
     }
 
-    /// "update the name field on the User struct to Aaron" → "@User.name=$Aaron"
-    /// "set the status field on the Order to shipped" → "@Order.status=$shipped"
-    /// "change the value of count in the Counter to 0" → "@Counter.count=$0"
+    // "update the name field on the User struct to Aaron" -> "@User.name=$Aaron"
+    // "set the status field on the Order to shipped" -> "@Order.status=$shipped"
+    // "change the value of count in the Counter to 0" -> "@Counter.count=$0"
     fn match_update_member(&self, lower: &str) -> Option<(String, String)> {
         let rest = if lower.starts_with("update the ") {
             &lower[11..]
@@ -1444,8 +1460,8 @@ impl CodeTranslator {
         Some((axon, annotation))
     }
 
-    /// "change the type of the name field on User to string" → "@User.name:string"
-    /// "change the type of email from string to Email" → ".email:string→Email"
+    // "change the type of the name field on User to string" -> "@User.name:string"
+    // "change the type of email from string to Email" -> ".email:string->Email"
     fn match_change_type(&self, lower: &str) -> Option<(String, String)> {
         let rest = if lower.starts_with("change the type of the ") {
             &lower[23..]
@@ -1494,13 +1510,13 @@ impl CodeTranslator {
 
         let axon = if target.is_empty() {
             if let Some(old) = &old_type {
-                format!("{}{}:{}→{}", mem_sigil, member_name, old, new_type)
+                format!("{}{}:{}->{}", mem_sigil, member_name, old, new_type)
             } else {
                 format!("{}{}:{}", mem_sigil, member_name, new_type)
             }
         } else {
             if let Some(old) = &old_type {
-                format!("@{}{}{}:{}→{}", target, mem_sigil, member_name, old, new_type)
+                format!("@{}{}{}:{}->{}", target, mem_sigil, member_name, old, new_type)
             } else {
                 format!("@{}{}{}:{}", target, mem_sigil, member_name, new_type)
             }
@@ -1510,8 +1526,8 @@ impl CodeTranslator {
         Some((axon, annotation))
     }
 
-    /// "change the return type of the process function to Result" → "~process→:Result"
-    /// "change the return type of validate to bool" → "~validate→:bool"
+    // "change the return type of the process function to Result" -> "~process->:Result"
+    // "change the return type of validate to bool" -> "~validate->:bool"
     fn match_change_return_type(&self, lower: &str) -> Option<(String, String)> {
         let rest = if lower.starts_with("change the return type of the ") {
             &lower[30..]
@@ -1542,15 +1558,15 @@ impl CodeTranslator {
             return None;
         }
 
-        let axon = format!("~{}→:{}", func_name, new_type);
-        let annotation = format!("code-opt · struct(rettype) · ~{}→:{}", func_name, new_type);
+        let axon = format!("~{}->:{}", func_name, new_type);
+        let annotation = format!("code-opt · struct(rettype) · ~{}->:{}", func_name, new_type);
         Some((axon, annotation))
     }
 
-    /// "make the name field on User public" → "@User.name+pub"
-    /// "make the process method async" → "~process+async"
-    /// "make User serializable" → "@User+serial"
-    /// "make the Handler class abstract" → "@Handler+abstract"
+    // "make the name field on User public" -> "@User.name+pub"
+    // "make the process method async" -> "~process+async"
+    // "make User serializable" -> "@User+serial"
+    // "make the Handler class abstract" -> "@Handler+abstract"
     fn match_make_modifier(&self, lower: &str) -> Option<(String, String)> {
         if !lower.starts_with("make ") {
             return None;
@@ -1627,8 +1643,8 @@ impl CodeTranslator {
         }
 
         // No member keyword — treat as type modifier
-        // "make User public" → "@User+pub"
-        // "make the handler async" → "@handler+async"
+        // "make User public" -> "@User+pub"
+        // "make the handler async" -> "@handler+async"
         let target = self.strip_target_keywords(before_mod);
         let target = self.clean_ident(&target);
         if target.is_empty() {
@@ -1640,9 +1656,9 @@ impl CodeTranslator {
         Some((axon, annotation))
     }
 
-    /// "implement the Serializable interface on/for the User struct" → "@User:impl(@Serializable)"
-    /// "extend the BaseController class with UserController" → "@UserController<@BaseController"
-    /// "have User implement Display" → "@User:impl(@Display)"
+    // "implement the Serializable interface on/for the User struct" -> "@User:impl(@Serializable)"
+    // "extend the BaseController class with UserController" -> "@UserController<@BaseController"
+    // "have User implement Display" -> "@User:impl(@Display)"
     fn match_type_relation(&self, lower: &str) -> Option<(String, String)> {
         // Implement patterns — only match when there's a clear "on/for TARGET" structure
         // otherwise "implement caching" should fall through to action patterns
@@ -1745,9 +1761,9 @@ impl CodeTranslator {
         None
     }
 
-    /// "add an import for React" → "+use(react)"
-    /// "import the lodash module" → "+use(lodash)"
-    /// "remove the import for axios" → "-use(axios)"
+    // "add an import for React" -> "+use(react)"
+    // "import the lodash module" -> "+use(lodash)"
+    // "remove the import for axios" -> "-use(axios)" :)
     fn match_import_op(&self, lower: &str) -> Option<(String, String)> {
         // Add import
         let is_add = lower.starts_with("add an import for ") ||
@@ -1803,10 +1819,8 @@ impl CodeTranslator {
         Some((axon, annotation))
     }
 
-    // ── Structural helpers ───────────────────────────────────────────────────
-
-    /// Detect a member-type keyword at the start of text.
-    /// Returns (canonical_type, rest_after_keyword).
+    // Detect a member-type keyword at the start of text.
+    // Returns (canonical_type, rest_after_keyword).
     fn detect_member_keyword<'a>(&self, text: &'a str) -> Option<(&'static str, &'a str)> {
         let mut best: Option<(&'static str, usize)> = None;
         for (keywords, canonical) in MEMBER_KEYWORDS {
@@ -1826,8 +1840,8 @@ impl CodeTranslator {
         best.map(|(canonical, len)| (canonical, text[len..].trim()))
     }
 
-    /// Detect member keyword in the middle of text: "name field on User" →
-    /// ("field", "name", "User"). Returns (member_type, name_before, target_after).
+    // Detect member keyword in the middle of text: "name field on User" ->
+    // ("field", "name", "User"). Returns (member_type, name_before, target_after).
     fn detect_member_keyword_mid(&self, text: &str) -> Option<(&'static str, String, String)> {
         for (keywords, canonical) in MEMBER_KEYWORDS {
             for kw in *keywords {
@@ -1837,7 +1851,7 @@ impl CodeTranslator {
                     let before = text[..pos].trim();
                     let after = text[pos + pattern.len()..].trim();
                     if !before.is_empty() {
-                        // Strip leading prepositions from after: "on User" → "User"
+                        // Strip leading prepositions from after: "on User" -> "User"
                         let target = self.strip_leading_preps(after);
                         let target = self.strip_target_keywords(&target);
                         return Some((canonical, before.to_string(), target));
@@ -1856,7 +1870,7 @@ impl CodeTranslator {
         None
     }
 
-    /// Strip leading prepositions: "on the User" → "User", "in my app" → "app"
+    // Strip leading prepositions: "on the User" -> "User", "in my app" -> "app"
     fn strip_leading_preps(&self, text: &str) -> String {
         let preps = [
             "on the ", "on my ", "on our ", "on this ", "on ",
@@ -1873,8 +1887,8 @@ impl CodeTranslator {
         text.to_string()
     }
 
-    /// Extract member name and target from text like "email to the User struct"
-    /// or "called email to the User struct" or "email on the User struct"
+    // Extract member name and target from text like "email to the User struct"
+    // or "called email to the User struct" or "email on the User struct"
     fn extract_name_and_target(&self, text: &str, member_type: &str) -> (String, String) {
         let text = text.trim();
         // Strip "called" / "named"
@@ -1902,7 +1916,7 @@ impl CodeTranslator {
         self.extract_name_and_target_on(text)
     }
 
-    /// Extract "NAME from TARGET" where TARGET is after a prep like "from the X struct"
+    // Extract "NAME from TARGET" where TARGET is after a prep like "from the X struct"
     fn extract_name_and_target_from(&self, text: &str) -> (String, String) {
         let text = text.trim();
         let text = if text.starts_with("called ") { &text[7..] }
@@ -1922,7 +1936,7 @@ impl CodeTranslator {
         (text.to_string(), String::new())
     }
 
-    /// Split "NAME on/in/of TARGET" pattern
+    // Split "NAME on/in/of TARGET" pattern
     fn extract_name_and_target_on(&self, text: &str) -> (String, String) {
         let text = text.trim();
         for prep in TARGET_PREPS {
@@ -1936,7 +1950,7 @@ impl CodeTranslator {
         (text.to_string(), String::new())
     }
 
-    /// Split text at the first occurrence of any of the given prepositions.
+    // Split text at the first occurrence of any of the given prepositions.
     fn split_at_prep<'a>(&self, text: &'a str, preps: &[&str]) -> (&'a str, &'a str) {
         for prep in preps {
             if let Some(pos) = text.find(prep) {
@@ -1946,7 +1960,7 @@ impl CodeTranslator {
         (text, "")
     }
 
-    /// Get the first whitespace-separated word and the rest.
+    // Get the first whitespace-separated word and the rest.
     fn split_at_first_word<'a>(&self, text: &'a str) -> (String, &'a str) {
         let text = text.trim();
         if let Some(pos) = text.find(' ') {
@@ -1956,7 +1970,7 @@ impl CodeTranslator {
         }
     }
 
-    /// Strip target-type keywords ("struct", "class", "type", etc.)
+    // Strip target-type keywords ("struct", "class", "type", etc.)
     fn strip_target_keywords(&self, text: &str) -> String {
         let mut words: Vec<&str> = text.split_whitespace().collect();
         words.retain(|w| {
@@ -1969,7 +1983,7 @@ impl CodeTranslator {
         words.join(" ")
     }
 
-    /// Strip member-type keywords from text
+    // Strip member-type keywords from text
     fn strip_member_keywords(&self, text: &str) -> String {
         let mut result = text.to_string();
         for (keywords, _) in MEMBER_KEYWORDS {
@@ -1989,7 +2003,7 @@ impl CodeTranslator {
         result.trim().to_string()
     }
 
-    /// Get the sigils for a member type: (target_sigil_prefix, member_sigil)
+    // Get the sigils for a member type: (target_sigil_prefix, member_sigil)
     fn member_sigils(&self, member_type: &str) -> (&str, &str) {
         match member_type {
             "field" | "variant" => ("", "."),
@@ -2000,7 +2014,7 @@ impl CodeTranslator {
         }
     }
 
-    /// Strip member-type keywords from a name (e.g., "status field" → "status")
+    // Strip member-type keywords from a name (e.g., "status field" -> "status")
     fn strip_member_words(&self, text: &str) -> String {
         let mut words: Vec<&str> = text.split_whitespace().collect();
         words.retain(|w| {
@@ -2018,7 +2032,7 @@ impl CodeTranslator {
         words.join(" ")
     }
 
-    /// Clean an identifier: lowercase, strip articles, hyphenate multi-word.
+    // Clean an identifier: lowercase, strip articles, hyphenate multi-word.
     fn clean_ident(&self, text: &str) -> String {
         let mut result = text.trim().to_string();
 
@@ -2051,9 +2065,9 @@ impl CodeTranslator {
         }
     }
 
-    // ── Part extraction ──────────────────────────────────────────────────────
+    // Part extraction 
 
-    /// Extract subject, scope, and transform target from the remaining text.
+    // Extract subject, scope, and transform target from the remaining text.
     fn extract_parts(&self, text: &str) -> (String, String, String) {
         let mut subject = text.to_string();
         let mut scope = String::new();
@@ -2089,7 +2103,7 @@ impl CodeTranslator {
         (subject, scope, transform)
     }
 
-    // ── Subject cleaning ─────────────────────────────────────────────────────
+    // Subject cleaning
 
     fn clean_subject(&self, text: &str) -> String {
         let mut result = text.trim().to_string();
@@ -2101,25 +2115,55 @@ impl CodeTranslator {
             result.pop();
         }
 
-        // Strip leading articles/filler
-        let lower = result.to_lowercase();
-        for noise in SUBJECT_NOISE {
-            if lower.starts_with(noise) {
-                result = result[noise.len()..].trim().to_string();
-                break;
+        // Strip leading articles/filler (multi-word noise prefixes)
+        let mut changed = true;
+        while changed {
+            changed = false;
+            let lower = result.to_lowercase();
+            for noise in SUBJECT_NOISE {
+                if lower.starts_with(noise) {
+                    result = result[noise.len()..].trim().to_string();
+                    changed = true;
+                    break;
+                }
             }
         }
 
-        // Hyphenate multi-word subjects (replace spaces with hyphens)
-        result = result.split_whitespace().collect::<Vec<_>>().join("-");
-
-        // Lowercase the result
+        // Lowercase
         result = result.to_lowercase();
 
-        result
+        // Split into words, filter stop words, abbreviate each, rejoin
+        let words: Vec<String> = result
+            .split_whitespace()
+            .filter(|w| !SUBJECT_STOP_WORDS.contains(w))
+            .map(|w| self.abbreviate_word(w))
+            .collect();
+
+        words.join("-")
     }
 
-    // ── Output formatting ────────────────────────────────────────────────────
+    /// Abbreviate a single word (or hyphenated compound) using the active tier.
+    fn abbreviate_word(&self, word: &str) -> String {
+        if word.contains('-') {
+            word.split('-')
+                .map(|part| self.abbreviate_single(part))
+                .collect::<Vec<_>>()
+                .join("-")
+        } else {
+            self.abbreviate_single(word)
+        }
+    }
+
+    fn abbreviate_single(&self, word: &str) -> String {
+        for &(full, abbr) in &self.abbrev_table {
+            if word == full {
+                return abbr.to_string();
+            }
+        }
+        word.to_string()
+    }
+
+    // Output formatting 
 
     fn format_action(&self, verb: &str, subject: &str, scope: &str, transform: &str) -> String {
         let mut axon = if subject.is_empty() {
@@ -2132,7 +2176,7 @@ impl CodeTranslator {
             axon.push_str(scope);
         }
         if !transform.is_empty() {
-            axon.push_str("→");
+            axon.push_str("->");
             axon.push_str(transform);
         }
         axon
@@ -2145,7 +2189,7 @@ impl CodeTranslator {
             axon.push_str(scope);
         }
         if !transform.is_empty() {
-            axon.push_str("→");
+            axon.push_str("->");
             axon.push_str(transform);
         }
         axon
@@ -2167,7 +2211,7 @@ mod tests {
         let ct = CodeTranslator::new();
         let r = ct.translate("create documentation for the login component in the auth service");
         assert!(r.matched);
-        assert_eq!(r.axon, ">doc login-component:auth-service");
+        assert_eq!(r.axon, ">doc login-comp:auth-service");
     }
 
     #[test]
@@ -2175,7 +2219,7 @@ mod tests {
         let ct = CodeTranslator::new();
         let r = ct.translate("what is the best approach to implement caching");
         assert!(r.matched);
-        assert_eq!(r.axon, "?best implement-caching");
+        assert_eq!(r.axon, "?best impl-caching");
     }
 
     #[test]
@@ -2216,7 +2260,7 @@ mod tests {
         let ct = CodeTranslator::new();
         let r = ct.translate("migrate the codebase from javascript to typescript");
         assert!(r.matched);
-        assert!(r.axon.contains("→"));
+        assert!(r.axon.contains("->"));
     }
 
     #[test]

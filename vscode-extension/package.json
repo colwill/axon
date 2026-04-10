@@ -2,7 +2,7 @@
   "name": "axon-notation",
   "displayName": "AXON Notation",
   "description": "Translate natural language to AXON notation for token-efficient AI communication",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "colwill",
   "license": "MIT",
   "icon": "resources/axon.png",

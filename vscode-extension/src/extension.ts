@@ -74,39 +74,41 @@ class ChatHistory {
   recent(count = 20): ChatEntry[] {
     return this.entries.slice(-count).reverse();
   }
+
+  clear() {
+    this.entries = [];
+    this.save();
+  }
 }
 
-const AXON_SYSTEM_PROMPT = `You are fluent in AXON (AI eXchange Optimized Notation), a compact symbolic language designed for precise, token-efficient communication between humans and AI systems. You can encode natural language into AXON and decode AXON back into natural language.
+const AXON_SYSTEM_PROMPT = `You are fluent in AXON v1.0 (AI eXchange Optimized Notation), a compact symbolic language designed for precise, token-efficient communication between humans and AI systems. You can encode natural language into AXON and decode AXON back into natural language.
 
 ## AXON Specification v1.0
 
 ### Type Sigils
 
-Every meaningful token is prefixed with a sigil indicating its semantic type:
+Sigils are applied conditionally — only to tokens in known entity/concept/verb databases.
+Unknown tokens are emitted bare (no sigil). Consecutive bare tokens merge into hyphenated compounds.
 
   @  Entity / Agent      — A named actor, system, or proper noun: @sun, @OpenAI, @user
   #  Concept / Abstract  — An idea, category, or domain: #gravity, #justice, #climate
   ~  Process / Action    — A verb, transformation, or operation: ~emit, ~learn, ~fail
   ?  Query / Unknown     — An open question or unresolved value: ?cause, ?result
-  !  Assert              — A high-confidence factual claim: !true, !confirmed
-  %  Quantifier          — A proportion, count, or frequency: %all, %few, %0.73
+  !  Negation            — Negated token: !evidence, !data
   ^  Temporal            — A time reference or duration: ^now, ^T-2d, ^T+1mo
   \$  Scalar              — A measurable value or magnitude: \$high, \$3.14, \$low
-  ≈  Approximate         — A fuzzy match or rough equivalence: ≈#similar, ≈\$100
-  ∅  Null / Absent       — Absence, void, or negated entity: ∅evidence, ∅data
 
-### Logical & Relational Operators
+### Operators (ASCII only)
 
-  →   Causes / leads to         ←   Result of / caused by
-  ↔   Mutual / bidirectional    ≡   Definitional equivalence
-  ∴   Therefore (conclusion)    ∵   Because (premise/reason)
-  ¬   Not (negation)            ∧   And (conjunction)
-  ∨   Or (disjunction)          ⊕   Xor (exclusive or)
-  ⊃   Contains / superset       ∀   For all (universal)
-  ∃   Exists (existential)      Δ   Delta (change)
-  ∑   Sum / aggregate
+  ->   Causes / leads to         <-   Result of / caused by
+  :.   Therefore (conclusion)    bc   Because (premise/reason)
+  &&   And (conjunction)         ||   Or (disjunction)
+  A.   For all (universal)       E.   Exists (existential)
+  :    Type/impl annotation      =    Set value / assignment
+  +    Add member                -    Remove member
+  <    Inherits / extends
 
-### Epistemic Confidence Markers
+### Confidence Markers
 
   !!   Certain      — Verified fact, no doubt
   !    High         — Strong supporting evidence
@@ -120,17 +122,23 @@ Every meaningful token is prefixed with a sigil indicating its semantic type:
   ^now         The current moment
   ^T-Nd        N days in the past (e.g., ^T-7d = one week ago)
   ^T+Nd        N days in the future (e.g., ^T+30d = next month)
-  ^T+Nmo       N months in the future
-  ^T-Ny        N years in the past
-  ^∀t          All time — universally/always true
-  ^span[A,B]   Time range from A to B
+  ^A.t         All time — universally/always true
+
+### Abbreviation Dictionary
+
+Common terms are automatically shortened to save BPE tokens:
+  object->obj  function->fn  component->comp  documentation->docs
+  implementation->impl  authentication->auth  application->app
+  configuration->cfg  environment->env  database->db  parameter->param
+  reference->ref  performance->perf  property->prop  render->rnd  inline->inl
+  variable->var  message->msg  request->req  response->res  operation->op
 
 ### Grammar Pattern
 
   [QUANTIFIER] [SUBJECT sigil+name] [OPERATOR] [OBJECT sigil+name] [CONFIDENCE] [TEMPORAL]
 
-Parentheses group sub-expressions: ~fail(@server) ⊕ ~down(#network)
 Multi-word tokens use hyphens: #climate-change, @milky-way
+Bare (unsigiled) consecutive tokens merge into hyphenated compounds: new-obj-ref
 
 ### Command Verbs (Programming)
 
@@ -158,59 +166,64 @@ Multi-word tokens use hyphens: #climate-change, @milky-way
   @Type.x:T             Set field type
   @Type:impl(@Trait)    Implement trait/interface
   @A<@B                 A extends/inherits B
+  +use(module)          Add import
+  -use(module)          Remove import
 
-### Encoding Rules (Natural Language → AXON)
+### Encoding Rules (Natural Language -> AXON)
 
-1. Identify named entities, people, systems, organizations → prefix with @
-2. Identify abstract concepts, ideas, categories, domains → prefix with #
-3. Identify verbs, actions, processes, transformations → prefix with ~
-4. Identify numeric values, measurements, magnitudes → prefix with \$
-5. Detect causal relationships → use → or ←
-6. Detect logical connectives (and/or/therefore/because) → use ∧ ∨ ∴ ∵
-7. Detect negation (not, no evidence, without, absence) → use ¬ or ∅
-8. Detect universal/existential quantifiers (all, every, some) → use ∀ ∃
-9. Extract confidence level from hedge words → append confidence marker
-10. Extract time references → append temporal marker
-11. Strip filler words, articles, copulas, and social pleasantries
-12. Hyphenate multi-word tokens: "climate change" → #climate-change
+1. Named entities, people, systems, orgs -> @ prefix
+2. Known abstract concepts -> # prefix (unknown words get NO sigil)
+3. Known verbs, actions, processes -> ~ prefix (unknown verbs get NO sigil)
+4. Numeric values, measurements -> \$ prefix
+5. Causal relationships -> use -> or <-
+6. Logical connectives (and/or/therefore/because) -> && || :. bc
+7. Negation (not, no evidence, absence) -> ! prefix
+8. Universal/existential quantifiers (all, every, some) -> A. E.
+9. Extract confidence from hedge words -> append marker
+10. Extract time references -> append temporal marker
+11. Strip filler words, articles, copulas, pleasantries
+12. Abbreviate common terms using the dictionary
+13. Merge consecutive bare tokens into hyphenated compounds
 
-### Decoding Rules (AXON → Natural Language)
+### Decoding Rules (AXON -> Natural Language)
 
-1. @ tokens → named entities
-2. # tokens → concepts or abstract nouns
-3. ~ tokens → verbs (conjugate naturally for context)
-4. \$ tokens → numeric values or scalar descriptors
-5. → reads as "causes" or "leads to"
-6. ← reads as "is caused by" or "results from"
-7. ∴ reads as "therefore" · ∵ reads as "because"
-8. ¬ reads as "not" · ∅ reads as "no [noun]" or "absence of"
-9. ∀ reads as "all" or "every" · ∃ reads as "there exists"
-10. ∧ reads as "and" · ∨ reads as "or" · ⊕ reads as "either...or (but not both)"
-11. Confidence markers → hedge words (!! = "certainly", * = "probably", ** = "possibly")
-12. Temporal markers → time phrases (^now = "currently", ^T+30d = "in 30 days")
+1. @ tokens -> named entities
+2. # tokens -> concepts or abstract nouns
+3. ~ tokens -> verbs (conjugate naturally)
+4. \$ tokens -> numeric values or scalar descriptors
+5. -> reads as "causes" / "leads to"
+6. <- reads as "is caused by" / "results from"
+7. :. reads as "therefore" / bc reads as "because"
+8. ! prefix reads as "not" / "no [noun]"
+9. A. reads as "all" / "every" / E. reads as "there exists"
+10. && reads as "and" / || reads as "or"
+11. Bare tokens (no sigil) -> context-dependent nouns/adjectives
+12. Hyphenated compounds -> multi-word phrases
+13. Confidence markers -> hedge language
+14. Temporal markers -> time phrases
 
 ### Examples
 
-  "The sun probably emits ultraviolet radiation."
-  → @sun ~emit* #UV-radiation
-
-  "All living things require energy to survive."
-  → ∀@organism ⊃ (#energy → #survival!!)
-
-  "Climate change caused by CO2 leads to temperature rise."
-  → @CO2-emission → #climate-change!! → Δ\$temp↑
-
-  "There is no evidence that this treatment works."
-  → ∅evidence ∴ ¬~work(#treatment)
-
   "fix the bug in the auth service"
-  → >fix bug:auth-service
+  -> >fix bug:auth-service
 
   "what is the best way to cache"
-  → ?best cache
+  -> ?best cache
 
   "add a field email to User"
-  → @user+.email
+  -> @user+.email
+
+  "The sun probably emits ultraviolet radiation"
+  -> @sun ~emit* #ultraviolet #radiation
+
+  "Climate change is caused by CO2 emissions"
+  -> #climate-change <- @co2 #emission
+
+  "There is no evidence that this treatment works"
+  -> !#evidence :. !~work #treatment
+
+  "New object ref each render. Inline object prop"
+  -> A.new-obj-ref \$rnd inl-obj-prop
 
 ## Behavior
 
@@ -344,7 +357,8 @@ class ClaudeTerminalBridge {
 }
 
 export function activate(context: vscode.ExtensionContext) {
-  const translator = getTranslator(context.extensionPath);
+  const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  const translator = getTranslator(context.extensionPath, workspaceRoot);
   const history = new ChatHistory(context.globalStorageUri.fsPath);
   const claudeBridge = new ClaudeTerminalBridge();
   context.subscriptions.push({ dispose: () => claudeBridge.dispose() });
@@ -362,7 +376,7 @@ export function activate(context: vscode.ExtensionContext) {
       if (!userInput.trim()) return;
 
       // Translate to AXON
-      const result = translator.translate(userInput);
+      const result = await translator.translate(userInput);
       const axon = result.axon;
       const savings = result.savings;
       result.free();
@@ -433,8 +447,10 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(chat);
 
+  const extensionVersion = context.extension.packageJSON.version || "unknown";
+
   // ── Sidebar webview ─────────────────────────────────────────────────────
-  const sidebarProvider = new AxonSidebarProvider(translator, history, claudeBridge);
+  const sidebarProvider = new AxonSidebarProvider(translator, history, claudeBridge, extensionVersion);
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider("axon.chatView", sidebarProvider)
   );
@@ -466,7 +482,7 @@ export function activate(context: vscode.ExtensionContext) {
         "resources",
         "axon.svg"
       );
-      editorPanel.webview.html = getChatHtml();
+      editorPanel.webview.html = getChatHtml(extensionVersion);
       wireUpWebview(editorPanel.webview, translator, history, claudeBridge);
       editorPanel.onDidDispose(() => { editorPanel = undefined; });
     })
@@ -478,7 +494,7 @@ export function activate(context: vscode.ExtensionContext) {
       const input = await getInput();
       if (!input) return;
 
-      const result = translator.translate(input);
+      const result = await translator.translate(input);
       const pick = await vscode.window.showQuickPick(
         [
           {
@@ -520,7 +536,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("axon.translateToClaudeCode", async () => {
       const input = await getInput();
       if (!input) return;
-      const result = translator.translate(input);
+      const result = await translator.translate(input);
       await dispatch("claudeCode", result.axon, result.savings);
     })
   );
@@ -529,7 +545,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("axon.translateToCopilot", async () => {
       const input = await getInput();
       if (!input) return;
-      const result = translator.translate(input);
+      const result = await translator.translate(input);
       await dispatch("copilot", result.axon, result.savings);
     })
   );
@@ -538,7 +554,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("axon.translateToClipboard", async () => {
       const input = await getInput();
       if (!input) return;
-      const result = translator.translate(input);
+      const result = await translator.translate(input);
       await dispatch("clipboard", result.axon, result.savings);
     })
   );
@@ -597,7 +613,7 @@ async function dispatch(
 // ─── Shared webview helpers ──────────────────────────────────────────────────
 
 interface SidebarTranslator {
-  translate(input: string): { axon: string; annotation: string; savings: number; free(): void };
+  translate(input: string): Promise<{ axon: string; annotation: string; savings: number; free(): void }>;
 }
 
 let terminalSpecInitialized = false;
@@ -668,12 +684,44 @@ async function sendToClaude(
 }
 
 function wireUpWebview(webview: vscode.Webview, translator: SidebarTranslator, history: ChatHistory, bridge: ClaudeTerminalBridge) {
+  // Conversation history for Language Model API streaming
+  const chatMessages: vscode.LanguageModelChatMessage[] = [
+    vscode.LanguageModelChatMessage.User(AXON_SYSTEM_PROMPT),
+  ];
+
+  /** Try to get a VS Code Language Model. Returns null if none available. */
+  async function getLanguageModel(): Promise<vscode.LanguageModelChat | null> {
+    try {
+      const models = await vscode.lm.selectChatModels({ vendor: "copilot" });
+      if (models[0]) return models[0];
+      const allModels = await vscode.lm.selectChatModels();
+      return allModels[0] || null;
+    } catch {
+      return null;
+    }
+  }
+
+  /** Stream a response from the Language Model API to the webview. */
+  async function streamFromModel(
+    model: vscode.LanguageModelChat,
+    axon: string
+  ): Promise<string> {
+    chatMessages.push(vscode.LanguageModelChatMessage.User(axon));
+    const chatResponse = await model.sendRequest(chatMessages, {});
+    let fullResponse = "";
+    for await (const fragment of chatResponse.text) {
+      fullResponse += fragment;
+      webview.postMessage({ type: "response-stream", text: fullResponse });
+    }
+    chatMessages.push(vscode.LanguageModelChatMessage.Assistant(fullResponse));
+    return fullResponse;
+  }
+
   webview.onDidReceiveMessage(async (msg) => {
     if (msg.type === "init") {
       const target: string = msg.target;
 
       if (target === "claude") {
-        // Create the terminal and send a test prompt to initialise context
         const response = await bridge.sendRequest(
           "Acknowledge that you understand the AXON notation system and are ready to receive AXON-encoded messages.",
           AXON_SYSTEM_PROMPT,
@@ -683,30 +731,17 @@ function wireUpWebview(webview: vscode.Webview, translator: SidebarTranslator, h
         webview.postMessage({ type: "response-done" });
       } else if (target === "copilot") {
         try {
-          const models = await vscode.lm.selectChatModels({ vendor: "copilot" });
-          let model = models[0];
-          if (!model) {
-            const allModels = await vscode.lm.selectChatModels();
-            model = allModels[0];
-          }
+          const model = await getLanguageModel();
           if (!model) {
             webview.postMessage({ type: "response-stream", text: "No language model available. Install GitHub Copilot or another LM extension." });
             webview.postMessage({ type: "response-done" });
             return;
           }
 
-          const initPrompt = AXON_SYSTEM_PROMPT;
-          const messages = [
-            vscode.LanguageModelChatMessage.User(
-              initPrompt + "\n\nAcknowledge that you understand the AXON notation system and are ready to receive AXON-encoded messages."
-            ),
-          ];
-          const chatResponse = await model.sendRequest(messages, {});
-          let fullResponse = "";
-          for await (const fragment of chatResponse.text) {
-            fullResponse += fragment;
-            webview.postMessage({ type: "response-stream", text: fullResponse });
-          }
+          await streamFromModel(
+            model,
+            "Acknowledge that you understand the AXON notation system and are ready to receive AXON-encoded messages."
+          );
           webview.postMessage({ type: "response-done" });
         } catch (err: any) {
           const errMsg =
@@ -717,6 +752,12 @@ function wireUpWebview(webview: vscode.Webview, translator: SidebarTranslator, h
           webview.postMessage({ type: "response-done" });
         }
       }
+      return;
+    }
+
+    if (msg.type === "clear-history") {
+      history.clear();
+      webview.postMessage({ type: "history-cleared" });
       return;
     }
 
@@ -733,17 +774,36 @@ function wireUpWebview(webview: vscode.Webview, translator: SidebarTranslator, h
       const input = msg.text;
       if (!input?.trim()) return;
 
-      const result = translator.translate(input);
+      const result = await translator.translate(input);
       const axon = result.axon;
       const savings = result.savings;
       result.free();
 
-      // Create a history entry (response filled in later)
       const entry = history.add({ userInput: input, axon, savings, response: "" });
-
       webview.postMessage({ type: "axon", axon, savings });
 
-      // Send AXON to Claude via the terminal bridge
+      // Try VS Code Language Model API first (guaranteed streaming)
+      try {
+        const model = await getLanguageModel();
+        if (model) {
+          const response = await streamFromModel(model, axon);
+          history.updateResponse(entry.id, response);
+          webview.postMessage({ type: "response-done" });
+          return;
+        }
+      } catch (err: any) {
+        if (err?.code === "NoPermissions") {
+          webview.postMessage({
+            type: "response-stream",
+            text: "Permission denied. Click **Allow** when prompted to let AXON use the language model.",
+          });
+          webview.postMessage({ type: "response-done" });
+          return;
+        }
+        // Fall through to Claude bridge
+      }
+
+      // Fall back to Claude terminal bridge
       try {
         const response = await bridge.sendRequest(
           axon,
@@ -768,7 +828,8 @@ class AxonSidebarProvider implements vscode.WebviewViewProvider {
   constructor(
     private readonly translator: SidebarTranslator,
     private readonly history: ChatHistory,
-    private readonly bridge: ClaudeTerminalBridge
+    private readonly bridge: ClaudeTerminalBridge,
+    private readonly version: string
   ) {}
 
   resolveWebviewView(
@@ -777,12 +838,12 @@ class AxonSidebarProvider implements vscode.WebviewViewProvider {
     _token: vscode.CancellationToken
   ) {
     webviewView.webview.options = { enableScripts: true };
-    webviewView.webview.html = getChatHtml();
+    webviewView.webview.html = getChatHtml(this.version);
     wireUpWebview(webviewView.webview, this.translator, this.history, this.bridge);
   }
 }
 
-function getChatHtml(): string {
+function getChatHtml(version: string): string {
     return `<!DOCTYPE html>
 <html>
 <head>
@@ -810,12 +871,25 @@ function getChatHtml(): string {
   .chat-logo {
     font-family: var(--vscode-editor-font-family, monospace);
     font-size: 24px;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: 0.08em;
     color: var(--vscode-foreground);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
   }
-  .chat-logo span {
-    color: var(--vscode-textLink-foreground);
+  .chat-logo .accent {
+    color: #7c5cfc;
+  }
+  .spec-badge {
+    font-family: var(--vscode-font-family, system-ui, sans-serif);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    background: rgba(124, 92, 252, 0.15);
+    color: #7c5cfc;
+    letter-spacing: 0;
   }
   .session-select {
     width: 100%;
@@ -1029,9 +1103,9 @@ function getChatHtml(): string {
   .history-close:hover { opacity: 1; }
 </style>
 </head>
-<body>
+<body data-version="${version}" data-spec-version="1.0">
   <div class="chat-header">
-    <div class="chat-logo">AX<span>ON</span></div>
+    <div class="chat-logo"><span>AX<span class="accent">ON</span></span><span class="spec-badge">v1.0</span></div>
     <select class="session-select" id="session-select" onchange="loadSession(this.value)">
       <option value="current">Current session</option>
     </select>
@@ -1041,14 +1115,16 @@ function getChatHtml(): string {
       Type a question in natural language. AXON translates it to save tokens, then sends it to the AI.<br><br>
       <strong>Slash commands:</strong><br>
       <code>/clear</code> — clear chat<br>
+      <code>/clearhistory</code> — clear all saved history<br>
       <code>/init claude</code> — initialise context with Claude<br>
       <code>/init copilot</code> — initialise context with Copilot<br>
       <code>/history</code> — recent chat history<br>
-      <code>/history &lt;query&gt;</code> — search chat history
+      <code>/history &lt;query&gt;</code> — search chat history<br>
+      <code>/version</code> — show AXON version
     </div>
   </div>
   <div id="input-area">
-    <textarea id="input" rows="1" placeholder="Ask something... (/clear, /init, /history)"></textarea>
+    <textarea id="input" rows="1" placeholder="Ask something... (/clear, /clearhistory, /init, /history, /version)"></textarea>
     <button id="send" onclick="send()">Send</button>
   </div>
   <script>
@@ -1064,6 +1140,27 @@ function getChatHtml(): string {
       // Handle slash commands
       if (text === '/clear') {
         messagesEl.innerHTML = '';
+        inputEl.value = '';
+        inputEl.style.height = 'auto';
+        return;
+      }
+
+      if (text === '/clearhistory') {
+        vscode.postMessage({ type: 'clear-history' });
+        messagesEl.innerHTML = '';
+        inputEl.value = '';
+        inputEl.style.height = 'auto';
+        return;
+      }
+
+      if (text === '/version') {
+        const ver = document.body.getAttribute('data-version') || 'unknown';
+        const specVer = document.body.getAttribute('data-spec-version') || 'unknown';
+        const div = document.createElement('div');
+        div.className = 'msg';
+        div.innerHTML = '<div style="opacity:0.7;font-size:12px;">AXON Extension v' + escapeHtml(ver) + '<br>AXON Spec v' + escapeHtml(specVer) + '</div>';
+        messagesEl.appendChild(div);
+        messagesEl.scrollTop = messagesEl.scrollHeight;
         inputEl.value = '';
         inputEl.style.height = 'auto';
         return;
@@ -1132,6 +1229,17 @@ function getChatHtml(): string {
 
     window.addEventListener('message', (e) => {
       const msg = e.data;
+
+      if (msg.type === 'history-cleared') {
+        // Reset session dropdown
+        sessionSelect.innerHTML = '<option value="current">Current session</option>';
+        sessions = [];
+        const div = document.createElement('div');
+        div.className = 'msg';
+        div.innerHTML = '<div style="opacity:0.5;font-size:12px;">History cleared.</div>';
+        messagesEl.appendChild(div);
+        return;
+      }
 
       if (msg.type === 'history-results') {
         // Always update session dropdown with latest results

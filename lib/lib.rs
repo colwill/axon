@@ -1,16 +1,36 @@
+#[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::*;
 
 pub mod code_translator;
 pub mod huffman;
 pub mod translator;
 
+#[cfg(feature = "wasm")]
 use translator::Translator;
 
+/// Estimate BPE token count by treating each whitespace-separated word as at
+/// least one token and counting non-alphanumeric characters as additional
+/// tokens (BPE tokenizers almost always split on symbol boundaries).
+pub fn estimate_tokens(text: &str) -> usize {
+    let mut count = 0usize;
+    for word in text.split_whitespace() {
+        count += 1;
+        for ch in word.chars() {
+            if !ch.is_alphanumeric() {
+                count += 1;
+            }
+        }
+    }
+    count.max(1)
+}
+
+#[cfg(feature = "wasm")]
 #[wasm_bindgen]
 pub struct AxonTranslator {
     inner: Translator,
 }
 
+#[cfg(feature = "wasm")]
 #[wasm_bindgen]
 pub struct TranslationResult {
     axon: String,
@@ -19,6 +39,7 @@ pub struct TranslationResult {
     axon_tokens: usize,
 }
 
+#[cfg(feature = "wasm")]
 #[wasm_bindgen]
 impl TranslationResult {
     #[wasm_bindgen(getter)]
@@ -41,6 +62,7 @@ impl TranslationResult {
     }
 }
 
+#[cfg(feature = "wasm")]
 #[wasm_bindgen]
 impl AxonTranslator {
     #[wasm_bindgen(constructor)]
@@ -52,8 +74,8 @@ impl AxonTranslator {
 
     pub fn translate(&self, input: &str) -> TranslationResult {
         let result = self.inner.translate(input);
-        let input_tokens = input.split_whitespace().count();
-        let axon_tokens = result.axon.split_whitespace().count();
+        let input_tokens = estimate_tokens(input);
+        let axon_tokens = estimate_tokens(&result.axon);
         TranslationResult {
             axon: result.axon,
             annotation: result.annotation,
@@ -74,6 +96,7 @@ impl AxonTranslator {
     }
 }
 
+#[cfg(feature = "wasm")]
 #[wasm_bindgen]
 pub struct CompressionResult {
     encoded: String,
@@ -82,6 +105,7 @@ pub struct CompressionResult {
     ratio: f64,
 }
 
+#[cfg(feature = "wasm")]
 #[wasm_bindgen]
 impl CompressionResult {
     #[wasm_bindgen(getter)]

@@ -1,3 +1,6 @@
+[workspace]
+members = [".", "repl"]
+
 [package]
 name = "axon"
 version = "1.0.0"
@@ -5,8 +8,24 @@ edition = "2021"
 description = "AXON — AI eXchange Optimized Notation"
 
 [lib]
+path = "lib/lib.rs"
 crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["wasm"]
+wasm = ["dep:wasm-bindgen"]
 
 [dependencies]
 serde = { version = "1", features = ["derive"] }
-wasm-bindgen = "0.2"
+wasm-bindgen = { version = "0.2", optional = true }
+
+[dev-dependencies]
+serde_json = "1"
+
+[[test]]
+name = "code_questions"
+path = "lib/tests/code_questions.rs"
+
+[[test]]
+name = "caveman_comparison"
+path = "lib/tests/caveman_comparison.rs"
