@@ -1,0 +1,16 @@
+{
+  "name": "axon",
+  "type": "module",
+  "description": "AXON — AI eXchange Optimized Notation",
+  "version": "1.0.0",
+  "files": [
+    "axon_bg.wasm",
+    "axon.js",
+    "axon.d.ts"
+  ],
+  "main": "axon.js",
+  "types": "axon.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

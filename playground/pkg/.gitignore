@@ -1,0 +1,11 @@
+# Ignore everything by default
+*
+
+# But track the files needed for GitHub Pages
+!.gitignore
+!axon.js
+!axon.d.ts
+!axon_bg.wasm
+!axon_bg.wasm.d.ts
+!package.json
+!README.md
